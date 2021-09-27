@@ -860,7 +860,8 @@ void PhysicsWorld::SendCollisionEvents()
                 continue;
 
             // Skip collision event signaling if both objects are static, or if collision event mode does not match
-            if (bodyA->GetMass() == 0.0f && bodyB->GetMass() == 0.0f)
+            // But allow when two triggers collide
+            if ((bodyA->GetMass() == 0.0f && bodyB->GetMass() == 0.0f) && (!bodyA->IsTrigger() || !bodyB->IsTrigger()))
                 continue;
             if (bodyA->GetCollisionEventMode() == COLLISION_NEVER || bodyB->GetCollisionEventMode() == COLLISION_NEVER)
                 continue;
@@ -1030,7 +1031,8 @@ void PhysicsWorld::SendCollisionEvents()
                 bool trigger = bodyA->IsTrigger() || bodyB->IsTrigger();
 
                 // Skip collision event signaling if both objects are static, or if collision event mode does not match
-                if (bodyA->GetMass() == 0.0f && bodyB->GetMass() == 0.0f)
+                // But allow when two triggers collide
+                if ((bodyA->GetMass() == 0.0f && bodyB->GetMass() == 0.0f) && (!bodyA->IsTrigger() || !bodyB->IsTrigger()))
                     continue;
                 if (bodyA->GetCollisionEventMode() == COLLISION_NEVER || bodyB->GetCollisionEventMode() == COLLISION_NEVER)
                     continue;
