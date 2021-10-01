@@ -16,6 +16,12 @@ set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(SOURCE
     STAR.h
     STAR.cpp
+
+    Application/Application.h
+    Application/Application.cpp
+
+    Locomotion/Character/BaseCharacter.h
+    Locomotion/Character/BaseCharacter.cpp
 )
 
 # Define executable name.

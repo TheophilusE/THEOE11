@@ -26,6 +26,7 @@
 
 #include <Urho3D/Engine/Engine.h>
 #include <Urho3D/Engine/EngineDefs.h>
+#include <Urho3D/Resource/XMLFile.h>
 
 namespace Tests
 {

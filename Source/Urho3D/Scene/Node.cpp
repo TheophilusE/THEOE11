@@ -38,6 +38,8 @@
 #include "../Scene/SmoothedTransform.h"
 #include "../Scene/UnknownComponent.h"
 
+#include <charconv>
+
 #include "../DebugNew.h"
 
 #ifdef _MSC_VER
@@ -1501,6 +1503,74 @@ Node* Node::GetChild(StringHash nameHash, bool recursive) const
     return nullptr;
 }
 
+Node* Node::GetChildByNameOrIndex(ea::string_view name) const
+{
+    if (name.empty())
+        return nullptr;
+
+    if (name[0] == '#')
+    {
+        unsigned index = 0;
+        const auto result = std::from_chars(name.begin() + 1, name.end(), index, 10);
+        if (result.ec == std::errc{} && result.ptr == name.end())
+            return GetChild(index);
+    }
+
+    return GetChild(StringHash(name));
+}
+
+Serializable* Node::GetSerializableByName(ea::string_view name) const
+{
+    if (name.empty())
+        return const_cast<Node*>(this);
+
+    // TODO(animation): Support multiple components of the same type
+    return GetComponent(StringHash(name));
+}
+
+Node* Node::FindChild(ea::string_view path) const
+{
+    const auto sep = path.find('/');
+    const bool isLast = sep == ea::string_view::npos;
+    const ea::string_view childName = isLast ? path : path.substr(0, sep);
+    if (childName.empty())
+        return nullptr;
+
+    Node* child = GetChildByNameOrIndex(childName);
+    return child && !isLast ? child->FindChild(path.substr(sep + 1)) : child;
+}
+
+ea::pair<Serializable*, unsigned> Node::FindComponentAttribute(ea::string_view path) const
+{
+    const auto sep = path.find('/');
+    if (path.empty() || path[0] != '@' || sep == ea::string_view::npos)
+        return {};
+
+    const ea::string_view componentName = path.substr(1, sep - 1);
+    const ea::string_view attributeName = path.substr(sep + 1);
+
+    Serializable* serializable = GetSerializableByName(componentName);
+    if (!serializable)
+        return {};
+
+    const auto* attributes = serializable->GetAttributes();
+    if (!attributes)
+        return {};
+
+    const auto iter = ea::find_if(attributes->begin(), attributes->end(),
+        [&](const AttributeInfo& info)
+    {
+        return ea::string::comparei(
+            info.name_.begin(), info.name_.end(), attributeName.begin(), attributeName.end()) == 0;
+    });
+
+    if (iter == attributes->end())
+        return {};
+
+    const unsigned attributeIndex = iter - attributes->begin();
+    return { serializable, attributeIndex };
+}
+
 unsigned Node::GetNumNetworkComponents() const
 {
     unsigned num = 0;
@@ -1572,6 +1642,20 @@ bool Node::IsChildOf(Node* node) const
         parent = parent->parent_;
     }
     return false;
+}
+
+Node* Node::GetDirectChildFor(Node* indirectChild) const
+{
+    Node* parent = indirectChild->GetParent();
+    while (parent)
+    {
+        if (parent == this)
+            return indirectChild;
+
+        indirectChild = parent;
+        parent = indirectChild->GetParent();
+    }
+    return nullptr;
 }
 
 const Variant& Node::GetVar(StringHash key) const
@@ -2425,6 +2509,10 @@ Node* Node::CloneRecursive(Node* parent, SceneResolver& resolver, CreateMode mod
 
 void Node::RemoveComponent(ea::vector<SharedPtr<Component> >::iterator i)
 {
+    // Keep a shared pointer to the component to make sure
+    // the erase from container completes before component destruction
+    SharedPtr<Component> component(*i);
+
     // Send node change event. Do not send when already being destroyed
     if (Refs() > 0 && scene_)
     {

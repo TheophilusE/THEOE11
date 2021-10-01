@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2008-2020 the Urho3D project.
+// Copyright (c) 2017-2021 the rbfx project.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,36 +20,32 @@
 // THE SOFTWARE.
 //
 
-#include <Urho3D/Graphics/AnimatedModel.h>
-#include <Urho3D/Graphics/AnimationState.h>
-#include <Urho3D/Scene/Scene.h>
+#pragma once
 
-#include "Mover.h"
+#include "SceneUtils.h"
 
-#include <Urho3D/DebugNew.h>
+#include <Urho3D/Resource/XMLFile.h>
 
-Mover3D::Mover3D(Context* context) :
-    LogicComponent(context),
-    moveSpeed_(0.0f),
-    rotationSpeed_(0.0f)
+namespace Tests
 {
-    // Only the scene update event is needed: unsubscribe from the rest for optimization
-    SetUpdateEventMask(USE_UPDATE);
+
+void SerializeAndDeserializeScene(Scene* scene)
+{
+    auto xmlFile = MakeShared<XMLFile>(scene->GetContext());
+    auto xmlRoot = xmlFile->GetOrCreateRoot("scene");
+    scene->SaveXML(xmlRoot);
+    scene->Clear();
+    scene->LoadXML(xmlRoot);
 }
 
-void Mover3D::SetParameters(float moveSpeed, float rotationSpeed, const BoundingBox& bounds)
+Variant GetAttributeValue(const ea::pair<Serializable*, unsigned>& ref)
 {
-    moveSpeed_ = moveSpeed;
-    rotationSpeed_ = rotationSpeed;
-    bounds_ = bounds;
+    return ref.first->GetAttribute(ref.second);
 }
 
-void Mover3D::Update(float timeStep)
+Node* NodeRef::GetNode() const
 {
-    node_->Translate(Vector3::FORWARD * moveSpeed_ * timeStep);
+    return scene_ ? scene_->GetChild(name_, true) : nullptr;
+}
 
-    // If in risk of going outside the plane, rotate the model right
-    Vector3 pos = node_->GetPosition();
-    if (pos.x_ < bounds_.min_.x_ || pos.x_ > bounds_.max_.x_ || pos.z_ < bounds_.min_.z_ || pos.z_ > bounds_.max_.z_)
-        node_->Yaw(rotationSpeed_ * timeStep);
 }

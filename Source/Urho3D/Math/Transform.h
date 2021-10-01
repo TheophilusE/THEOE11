@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2008-2020 the Urho3D project.
+// Copyright (c) 2017-2020 the rbfx project.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,36 +20,21 @@
 // THE SOFTWARE.
 //
 
-#include <Urho3D/Graphics/AnimatedModel.h>
-#include <Urho3D/Graphics/AnimationState.h>
-#include <Urho3D/Scene/Scene.h>
+#pragma once
 
-#include "Mover.h"
+#include "../Math/Vector3.h"
+#include "../Math/Quaternion.h"
 
-#include <Urho3D/DebugNew.h>
-
-Mover3D::Mover3D(Context* context) :
-    LogicComponent(context),
-    moveSpeed_(0.0f),
-    rotationSpeed_(0.0f)
+namespace Urho3D
 {
-    // Only the scene update event is needed: unsubscribe from the rest for optimization
-    SetUpdateEventMask(USE_UPDATE);
-}
 
-void Mover3D::SetParameters(float moveSpeed, float rotationSpeed, const BoundingBox& bounds)
+/// Position, rotation and scale in 3D.
+/// TODO: Expand it into something more user-friendly.
+struct Transform
 {
-    moveSpeed_ = moveSpeed;
-    rotationSpeed_ = rotationSpeed;
-    bounds_ = bounds;
-}
+    Vector3 position_;
+    Quaternion rotation_;
+    Vector3 scale_{ Vector3::ONE };
+};
 
-void Mover3D::Update(float timeStep)
-{
-    node_->Translate(Vector3::FORWARD * moveSpeed_ * timeStep);
-
-    // If in risk of going outside the plane, rotate the model right
-    Vector3 pos = node_->GetPosition();
-    if (pos.x_ < bounds_.min_.x_ || pos.x_ > bounds_.max_.x_ || pos.z_ < bounds_.min_.z_ || pos.z_ > bounds_.max_.z_)
-        node_->Yaw(rotationSpeed_ * timeStep);
 }

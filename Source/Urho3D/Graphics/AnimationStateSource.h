@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2008-2020 the Urho3D project.
+// Copyright (c) 2017-2020 the rbfx project.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,36 +20,32 @@
 // THE SOFTWARE.
 //
 
-#include <Urho3D/Graphics/AnimatedModel.h>
-#include <Urho3D/Graphics/AnimationState.h>
-#include <Urho3D/Scene/Scene.h>
+/// \file
 
-#include "Mover.h"
+#pragma once
 
-#include <Urho3D/DebugNew.h>
+#include "../Graphics/AnimationState.h"
+#include "../Scene/Component.h"
 
-Mover3D::Mover3D(Context* context) :
-    LogicComponent(context),
-    moveSpeed_(0.0f),
-    rotationSpeed_(0.0f)
+namespace Urho3D
 {
-    // Only the scene update event is needed: unsubscribe from the rest for optimization
-    SetUpdateEventMask(USE_UPDATE);
-}
 
-void Mover3D::SetParameters(float moveSpeed, float rotationSpeed, const BoundingBox& bounds)
+class AnimationStateSource : public Component
 {
-    moveSpeed_ = moveSpeed;
-    rotationSpeed_ = rotationSpeed;
-    bounds_ = bounds;
-}
+    URHO3D_OBJECT(AnimationStateSource, Component);
 
-void Mover3D::Update(float timeStep)
-{
-    node_->Translate(Vector3::FORWARD * moveSpeed_ * timeStep);
+public:
+    AnimationStateSource(Context* context) : Component(context) {}
 
-    // If in risk of going outside the plane, rotate the model right
-    Vector3 pos = node_->GetPosition();
-    if (pos.x_ < bounds_.min_.x_ || pos.x_ > bounds_.max_.x_ || pos.z_ < bounds_.min_.z_ || pos.z_ > bounds_.max_.z_)
-        node_->Yaw(rotationSpeed_ * timeStep);
+    /// Mark that animation state tracks are dirty and should be reconnected.
+    /// Should be called on every substantial change in animated structure.
+    virtual void MarkAnimationStateTracksDirty() = 0;
+    /// Return animations states for AnimatedModel.
+    const AnimationStateVector& GetAnimationStates() const { return animationStates_; }
+
+protected:
+    /// Animation states. Shared with AnimatedModel when possible.
+    AnimationStateVector animationStates_;
+};
+
 }

@@ -1,21 +1,24 @@
 
-#include <Urho3D/Engine/Application.h>
-#include <Urho3D/Engine/EngineDefs.h>
-#include <Urho3D/Input/Input.h>
+#pragma once
+
+#include "Application/Application.h"
 
 // This is probably always OK.
 using namespace Urho3D;
 
+class Character;
 
-class STAR : public Application
+class STAR : public App
 {
     // This macro defines some methods that every `Urho3D::Object` descendant should have.
-    URHO3D_OBJECT(STAR, Application);
+    URHO3D_OBJECT(STAR, App);
+
 public:
     // Likewise every `Urho3D::Object` descendant should implement constructor with single `Context*` parameter.
     STAR(Context* context)
-        : Application(context)
+        : App(context)
     {
+        RegisterObjects(context);
     }
 
     void Setup() override;
@@ -23,7 +26,38 @@ public:
     void Start() override;
 
     void Stop() override;
+
+private:
+    void RegisterObjects(Context* context);
+    /// Create static scene content.
+    void CreateScene();
+    /// Create controllable character.
+    void CreateCharacter();
+    /// Construct an instruction text to the UI.
+    void CreateInstructions();
+    /// Subscribe to necessary events.
+    void SubscribeToEvents();
+    /// Handle application update. Set controls to character.
+    void HandleUpdate(StringHash eventType, VariantMap& eventData);
+    /// Handle application post-update. Update camera position after character has moved.
+    void HandlePostUpdate(StringHash eventType, VariantMap& eventData);
+    void HandlePostRenderUpdate(StringHash eventType, VariantMap& eventData);
+
+
+    /// The controllable character component.
+    WeakPtr<Character> character_;
+    /// First person camera flag.
+    bool firstPerson_;
+    bool drawDebug_;
+
+    struct
+    {
+        float minDistance = 1.0f;
+        float initialDistance = 5.0f;
+        float maxDistance = 20.0f;
+    } m_Camera;
 };
 
-// A helper macro which defines main function. Forgetting it will result in linker errors complaining about missing `_main` or `_WinMain@16`.
+// A helper macro which defines main function. Forgetting it will result in linker errors complaining about missing
+// `_main` or `_WinMain@16`.
 URHO3D_DEFINE_APPLICATION_MAIN(STAR);
