@@ -767,6 +767,53 @@ void SceneTab::RemoveSelection()
     ClearSelection();
 }
 
+void SceneTab::RefocusSelection()
+{
+    Scene* scene = GetScene();
+    if (scene == nullptr)
+        return;
+
+    if (!selectedNodes_.empty())
+    {
+        auto& refocusComponent = selectedNodes_.begin();
+
+        bool isMode3D_ = !scene->GetComponent<EditorSceneSettings>()->GetCamera2D();
+        StringHash cameraControllerType =
+            isMode3D_ ? DebugCameraController3D::GetTypeStatic() : DebugCameraController2D::GetTypeStatic();
+        if (Camera* camera = GetCamera())
+        {
+            auto* component = static_cast<DebugCameraController*>(camera->GetComponent(cameraControllerType));
+            if (component != nullptr)
+            {
+                /*
+                *   const Vector3 dir = component->GetNode()->GetRotation() * Vector3::FORWARD;
+
+                    Vector3 to = refocusComponent.get_node()->mValue.Get()->GetTransform().Translation() + dir * 10;
+                    const double len = Vector3(to - component->GetNode()->GetTransform().Translation()).Length();
+                    float speed = std::max(100.0f / (len > 0 ? float(len) : 1), 2.0f);
+                
+                    component->GetNode()->GetTransform().Translation().Lerp(dir, speed);
+                */
+
+                auto& cameraTranslation = component->GetNode()->GetTransform().Translation();
+                auto& refocusTranslation = refocusComponent.get_node()->mValue.Get()->GetTransform().Translation();
+
+                URHO3D_LOGINFO(cameraTranslation.ToString());
+
+                Vector3 from = cameraTranslation;
+                Vector3 to = refocusTranslation * 10;
+                const double length = Vector3(to - from).Length();
+                float speed = std::max(100.0f / (length > 0 ? float(length) : 1), 2.0f);
+
+                cameraTranslation = refocusTranslation + Vector3(0, 0, 10); // cameraTranslation.Lerp(to, speed);
+
+                URHO3D_LOGINFO("Refocused Camera to Entity " + refocusComponent.get_node()->mValue.Get()->GetName());
+                URHO3D_LOGINFO(cameraTranslation.ToString());
+            }
+        }
+    }
+}
+
 Scene* SceneTab::GetScene()
 {
     return GetSubsystem<SceneManager>()->GetActiveScene();
@@ -832,6 +879,11 @@ void SceneTab::OnUpdate(VariantMap& args)
                 }
                 else if (ui::IsKeyPressed(KEY_ESCAPE))
                     ClearSelection();
+
+                if (ui::IsKeyPressed(KEY_F))
+                {
+                    RefocusSelection();
+                }
             }
         }
 

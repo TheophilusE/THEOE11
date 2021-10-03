@@ -143,6 +143,9 @@ public:
     bool IsSelected(Component* component) const;
     /// Removes component if it was selected in inspector, otherwise removes selected scene nodes.
     void RemoveSelection();
+    /// Refocus component in camera view if it was selected in the inspector
+    /// Look at selected entity
+    void RefocusSelection();
     /// Return scene displayed in the tab viewport.
     Scene* GetScene();
     /// Returns editor viewport.
