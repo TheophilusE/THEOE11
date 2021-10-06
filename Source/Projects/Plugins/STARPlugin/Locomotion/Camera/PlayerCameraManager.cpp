@@ -1,7 +1,10 @@
 
 #include <Urho3D/Physics/PhysicsWorld.h>
 #include <Urho3D/Math/Ray.h>
+#include <Urho3D/IO/Log.h>
 #include <Urho3D/UI/UI.h>
+#include <Urho3D/Scene/Scene.h>
+#include <Urho3D/Scene/SceneManager.h>
 #include "PlayerCameraManager.h"
 #include "../Character/BaseCharacter.h"
 
@@ -10,10 +13,17 @@ namespace Urho3D
 void PlayerCameraManager::Update(float timeStep)
 {
     Input* input = context_->GetSubsystem<Input>();
-    Character* character = GetNode()->GetComponent<Character>();
+    auto* sceneSubSystem = context_->GetSubsystem<SceneManager>();
+    Character* character = GetNode()->GetParent()->GetComponent<Character>();
+
+    if (sceneSubSystem)
+    {
+        URHO3D_LOGINFO("Call from scene subsystem");
+    }
 
     if (character)
     {
+        URHO3D_LOGINFO("Character Node Found");
         // Clear previous controls
         character->controls_.Set(CTRL_FORWARD | CTRL_BACK | CTRL_LEFT | CTRL_RIGHT | CTRL_JUMP, false);
 

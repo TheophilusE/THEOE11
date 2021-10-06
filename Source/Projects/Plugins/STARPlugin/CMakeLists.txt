@@ -12,6 +12,9 @@ set(SOURCE
 
     Locomotion/Camera/PlayerCameraManager.h
     Locomotion/Camera/PlayerCameraManager.cpp
+
+    Locomotion/Character/CharacterController.h
+    Locomotion/Character/CharacterController.cpp
 )
 
 add_library (STARPlugin ${SOURCE})

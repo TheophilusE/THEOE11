@@ -33,6 +33,7 @@
 #include "STARPlugin.h"
 #include "Locomotion/Character/BaseCharacter.h"
 #include "Locomotion/Camera/PlayerCameraManager.h"
+#include "Locomotion/Character/CharacterController.h"
 
 URHO3D_DEFINE_PLUGIN_MAIN(Urho3D::STARPlugin);
 
@@ -51,6 +52,7 @@ void STARPlugin::RegisterObjects()
     // loaded / saved
     Character::RegisterObject(context_, this);
     PlayerCameraManager::RegisterObject(context_, this);
+    CharacterController::RegisterObject(context_, this);
 }
 
 void STARPlugin::Load()
@@ -93,16 +95,8 @@ void STARPlugin::SubscribeToEvents()
     SubscribeToEvent(E_POSTRENDERUPDATE, URHO3D_HANDLER(STARPlugin, HandlePostRenderUpdate));
 }
 
-void STARPlugin::HandleUpdate(StringHash eventType, VariantMap& eventData)
-{
-}
-
-void STARPlugin::HandlePostUpdate(StringHash eventType, VariantMap& eventData)
-{
-}
-
-void STARPlugin::HandlePostRenderUpdate(StringHash eventType, VariantMap& eventData)
-{
-}
+void STARPlugin::HandleUpdate(StringHash eventType, VariantMap& eventData) {}
+void STARPlugin::HandlePostUpdate(StringHash eventType, VariantMap& eventData) {}
+void STARPlugin::HandlePostRenderUpdate(StringHash eventType, VariantMap& eventData) {}
 
 }
