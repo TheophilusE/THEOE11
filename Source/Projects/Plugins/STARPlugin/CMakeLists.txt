@@ -6,6 +6,12 @@ endif ()
 set(SOURCE
 	STARPlugin.h
 	STARPlugin.cpp
+	
+	Locomotion/Character/BaseCharacter.h
+	Locomotion/Character/BaseCharacter.cpp
+
+    Locomotion/Camera/PlayerCameraManager.h
+    Locomotion/Camera/PlayerCameraManager.cpp
 )
 
 add_library (STARPlugin ${SOURCE})

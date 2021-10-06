@@ -4,6 +4,9 @@
 
 #include <Urho3D/Engine/PluginApplication.h>
 
+// Forward Declarations
+class Character;
+
 
 namespace Urho3D
 {
@@ -23,6 +26,18 @@ public:
     void Stop() override;
     /// Deinitialize plugin.
     void Unload() override;
+
+private:
+    /// Register scene components to application context
+    void RegisterObjects();
+    /// Subscribe to necessary events.
+    void SubscribeToEvents();
+    /// Handle application update. Set controls to character.
+    void HandleUpdate(StringHash eventType, VariantMap& eventData);
+    /// Handle application post-update. Update camera position after character has moved.
+    void HandlePostUpdate(StringHash eventType, VariantMap& eventData);
+    void HandlePostRenderUpdate(StringHash eventType, VariantMap& eventData);
+
 };
 
 
