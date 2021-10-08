@@ -32,6 +32,8 @@ private:
     void RegisterObjects();
     /// Subscribe to necessary events.
     void SubscribeToEvents();
+    /// Unsubscribe to necessary events.
+    void UnsubscribeToEvents();
     /// Handle application update. Set controls to character.
     void HandleUpdate(StringHash eventType, VariantMap& eventData);
     /// Handle application post-update. Update camera position after character has moved.

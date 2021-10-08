@@ -84,6 +84,10 @@ void STARPlugin::Start()
 void STARPlugin::Stop()
 {
     // Tear down any game state here. Unregister events. Remove objects. Editor takes back the control.
+
+    UnsubscribeToEvents();
+
+    URHO3D_LOGINFO("Star Plugin -> On Stop");
 }
 
 void STARPlugin::SubscribeToEvents()
@@ -93,6 +97,13 @@ void STARPlugin::SubscribeToEvents()
     // Subscribe to PostUpdate event for updating the camera position after physics simulation
     SubscribeToEvent(E_POSTUPDATE, URHO3D_HANDLER(STARPlugin, HandlePostUpdate));
     SubscribeToEvent(E_POSTRENDERUPDATE, URHO3D_HANDLER(STARPlugin, HandlePostRenderUpdate));
+}
+
+void STARPlugin::UnsubscribeToEvents()
+{
+    UnsubscribeFromEvent(this, E_UPDATE);
+    UnsubscribeFromEvent(this, E_POSTUPDATE);
+    UnsubscribeFromEvent(this, E_POSTRENDERUPDATE);
 }
 
 void STARPlugin::HandleUpdate(StringHash eventType, VariantMap& eventData) {}
