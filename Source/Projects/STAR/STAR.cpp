@@ -25,6 +25,8 @@
 #include "STAR.h"
 
 #include "Locomotion/Character/BaseCharacter.h"
+#include "Locomotion/Character/CharacterController.h"
+#include "Locomotion/Camera/PlayerCameraManager.h"
 
 #include <Urho3D/DebugNew.h>
 
@@ -50,6 +52,8 @@ void STAR::RegisterObjects(Context* context)
     // Register factory and attributes for the Character component so it can be created via CreateComponent, and
     // loaded / saved
     Character::RegisterObject(context);
+    CharacterController::RegisterObject(context);
+    PlayerCameraManager::RegisterObject(context);
 }
 
 void STAR::Start()
@@ -71,7 +75,7 @@ void STAR::Start()
     CreateCharacter();
 
     // Create the UI content
-    //CreateInstructions();
+    CreateInstructions();
 
     // Subscribe to necessary events
     SubscribeToEvents();
@@ -121,7 +125,7 @@ void STAR::CreateCharacter()
     object->SetModel(cache->GetResource<Model>("Models/Locomotion/ALS_N_Pose.mdl"));
     //object->SetModel(cache->GetResource<Model>("Models/Locomotion/Manneqin/Model.mdl"));
     //object->SetMaterial(cache->GetResource<Material>("Models/Locomotion/Manneqin/Materials/M_Male_Body.xml"));
-    object->SetCastShadows(false);
+    object->SetCastShadows(true);
     adjustNode->CreateComponent<AnimationController>();
 
     // Set the head bone for manual control
@@ -147,6 +151,9 @@ void STAR::CreateCharacter()
     // Remember it so that we can set the controls. Use a ea::weak_ptr because the scene hierarchy already owns it
     // and keeps it alive as long as it's not removed from the hierarchy
     character_ = objectNode->CreateComponent<Character>();
+    objectNode->CreateComponent<CharacterController>();
+    auto* cameraManager = objectNode->CreateComponent<PlayerCameraManager>();
+    cameraManager->SetUp(scene_, cameraNode_);
 }
 
 void STAR::CreateInstructions()
@@ -157,17 +164,17 @@ void STAR::CreateInstructions()
     // Construct new Text object, set string to display and font to use
     auto* instructionText = ui->GetRoot()->CreateChild<Text>();
     instructionText->SetText(
-        "Use WASD keys and mouse/touch to move\n"
+        "Use WASD keys and mouse to move\n"
         "Space to jump, F to toggle 1st/3rd person\n"
     );
-    instructionText->SetFont(cache->GetResource<Font>("Game/Fonts/Anonymous Pro.ttf"), 15);
+    instructionText->SetFont(cache->GetResource<Font>("Fonts/NotoSans-Regular.ttf"), 12);
     // The text has multiple rows. Center them in relation to each other
     instructionText->SetTextAlignment(HA_CENTER);
 
     // Position the text relative to the screen center
     instructionText->SetHorizontalAlignment(HA_CENTER);
     instructionText->SetVerticalAlignment(VA_CENTER);
-    instructionText->SetPosition(0, ui->GetRoot()->GetHeight() / 4);
+    instructionText->SetPosition(0, ui->GetRoot()->GetHeight() / 2.5);
 }
 
 
@@ -193,39 +200,6 @@ void STAR::HandleUpdate(StringHash eventType, VariantMap& eventData)
 
     auto* input = GetSubsystem<Input>();
 
-    if (character_)
-    {
-        // Clear previous controls
-        character_->controls_.Set(CTRL_FORWARD | CTRL_BACK | CTRL_LEFT | CTRL_RIGHT | CTRL_JUMP, false);
-
-        // Update controls using keys
-        auto* ui = GetSubsystem<UI>();
-        if (!ui->GetFocusElement())
-        {
-            {
-                character_->controls_.Set(CTRL_FORWARD, input->GetKeyDown(KEY_W));
-                character_->controls_.Set(CTRL_BACK, input->GetKeyDown(KEY_S));
-                character_->controls_.Set(CTRL_LEFT, input->GetKeyDown(KEY_A));
-                character_->controls_.Set(CTRL_RIGHT, input->GetKeyDown(KEY_D));
-            }
-            character_->controls_.Set(CTRL_JUMP, input->GetKeyDown(KEY_SPACE));
-
-            {
-                character_->controls_.yaw_ += (float)input->GetMouseMoveX() * YAW_SENSITIVITY;
-                character_->controls_.pitch_ += (float)input->GetMouseMoveY() * YAW_SENSITIVITY;
-            }
-            // Limit pitch
-            character_->controls_.pitch_ = Clamp(character_->controls_.pitch_, -80.0f, 80.0f);
-            // Set rotation already here so that it's updated every rendering frame instead of every physics frame
-            character_->GetNode()->SetRotation(Quaternion(character_->controls_.yaw_, Vector3::UP));
-
-            // Switch between 1st and 3rd person
-            if (input->GetKeyPress(KEY_F))
-                firstPerson_ = !firstPerson_;
-
-        }
-    }
-
      // Toggle debug geometry with space
     if (input->GetKeyPress(KEY_M))
         drawDebug_ = !drawDebug_;
@@ -235,43 +209,6 @@ void STAR::HandlePostUpdate(StringHash eventType, VariantMap& eventData)
 {
     if (!character_)
         return;
-
-    Node* characterNode = character_->GetNode();
-
-    // Get camera lookat dir from character yaw + pitch
-    const Quaternion& rot = characterNode->GetRotation();
-    Quaternion dir = rot * Quaternion(character_->controls_.pitch_, Vector3::RIGHT);
-
-    // Turn head to camera pitch, but limit to avoid unnatural animation
-    Node* headNode = characterNode->GetChild("head", true);
-    float limitPitch = Clamp(character_->controls_.pitch_, -45.0f, 45.0f);
-    Quaternion headDir = rot * Quaternion(limitPitch, Vector3(1.0f, 0.0f, 0.0f));
-    // This could be expanded to look at an arbitrary target, now just look at a point in front
-    Vector3 headWorldTarget = headNode->GetWorldPosition() + headDir * Vector3(0.0f, 0.0f, -1.0f);
-    //headNode->LookAt(headWorldTarget, Vector3(0.0f, 1.0f, 0.0f));
-
-    if (firstPerson_)
-    {
-        cameraNode_->SetPosition(headNode->GetWorldPosition() + rot * Vector3(0.0f, 0.15f, 0.2f));
-        cameraNode_->SetRotation(dir);
-    }
-    else
-    {
-        // Third person camera: position behind the character
-        Vector3 aimPoint = characterNode->GetPosition() + rot * Vector3(0.0f, 1.7f, 0.0f);
-
-        // Collide camera ray with static physics objects (layer bitmask 2) to ensure we see the character properly
-        Vector3 rayDir = dir * Vector3::BACK;
-        float rayDistance = m_Camera.initialDistance;
-        PhysicsRaycastResult result;
-        scene_->GetComponent<PhysicsWorld>()->RaycastSingle(result, Ray(aimPoint, rayDir), rayDistance, 2);
-        if (result.body_)
-            rayDistance = Min(rayDistance, result.distance_);
-        rayDistance = Clamp(rayDistance, m_Camera.minDistance, m_Camera.maxDistance);
-
-        cameraNode_->SetPosition(aimPoint + rayDir * rayDistance);
-        cameraNode_->SetRotation(dir);
-    }
 }
 
 void STAR::HandlePostRenderUpdate(StringHash eventType, VariantMap& eventData)

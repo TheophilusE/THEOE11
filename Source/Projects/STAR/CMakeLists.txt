@@ -22,6 +22,12 @@ set(SOURCE
 
     Locomotion/Character/BaseCharacter.h
     Locomotion/Character/BaseCharacter.cpp
+
+    Locomotion/Camera/PlayerCameraManager.h
+    Locomotion/Camera/PlayerCameraManager.cpp
+
+    Locomotion/Character/CharacterController.h
+    Locomotion/Character/CharacterController.cpp
 )
 
 # Define executable name.
