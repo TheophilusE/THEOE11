@@ -226,11 +226,9 @@ namespace eastl
 
 	// 20.7.11, hash support
 #if EASTL_URHO3D_EXTENSIONS
-	template <typename T, typename Enable>
-	struct hash;
+	template <typename T, typename Enable> struct hash;
 #else
-	template <class T>
-	struct hash;
+	template <class T> struct hash;
 #endif
 	template <> struct hash<monostate>
 		{ size_t operator()(monostate) const { return static_cast<size_t>(-0x42); } };

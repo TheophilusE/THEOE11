@@ -143,9 +143,6 @@ public:
     bool IsSelected(Component* component) const;
     /// Removes component if it was selected in inspector, otherwise removes selected scene nodes.
     void RemoveSelection();
-    /// Refocus component in camera view if it was selected in the inspector
-    /// Look at selected entity
-    void RefocusSelection();
     /// Return scene displayed in the tab viewport.
     Scene* GetScene();
     /// Returns editor viewport.
@@ -247,6 +244,8 @@ protected:
     float rotateAroundDistance_ = 1;
     /// ID of node or component that is currently being reordered.
     unsigned reorderingId_ = M_MAX_UNSIGNED;
+    ///
+    unsigned reorderingInitialPos_ = M_MAX_UNSIGNED;
 };
 
 };

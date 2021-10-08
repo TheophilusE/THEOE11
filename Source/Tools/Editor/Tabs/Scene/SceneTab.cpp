@@ -529,10 +529,6 @@ void SceneTab::RenderHierarchy()
     if (performRangeSelectionFrame_ != ui::GetFrameCount())
         selectionRect_ = {ui::GetMousePos(), ui::GetMousePos()};
 
-    // Clear ID of currently reordered item.
-    if (!ui::IsMouseDown(MOUSEB_LEFT))
-        reorderingId_ = M_MAX_UNSIGNED;
-
     if (auto* scene = GetScene())
     {
         ImGuiStyle& style = ui::GetStyle();
@@ -613,27 +609,6 @@ void SceneTab::RenderNodeTree(Node* node)
         ui::EndDragDropTarget();
     }
 
-    // Node reordering.
-    Node* parent = node->GetParent();
-    float utility_buttons_width = ui::CalcTextSize(ICON_FA_ARROWS_ALT_V).x;
-    if (parent != nullptr && (ui::IsItemHovered() || reorderingId_ == node->GetID()))
-    {
-        ui::SameLine();
-        ui::SetCursorPosX(ui::GetContentRegionMax().x - utility_buttons_width - style.ItemInnerSpacing.x);
-        ui::SmallButton(ICON_FA_ARROWS_ALT_V);
-        if (ui::IsItemActive())
-        {
-            reorderingId_ = node->GetID();
-            ImVec2 mouse_pos = ui::GetMousePos();
-            if (mouse_pos.y < ui::GetItemRectMin().y)
-                parent->ReorderChild(node, parent->GetChildIndex(node) - 1);
-            else if (mouse_pos.y > ui::GetItemRectMax().y)
-                parent->ReorderChild(node, parent->GetChildIndex(node) + 1);
-        }
-        else if (ui::IsItemHovered())
-            ui::SetTooltip("Reorder");
-    }
-
     if (!opened)
     {
         // If TreeNode above is opened, it pushes it's label as an ID to the stack. However if it is not open then no
@@ -685,6 +660,37 @@ void SceneTab::RenderNodeTree(Node* node)
 
     RenderNodeContextMenu();
 
+    // Node reordering.
+    Node* parent = node->GetParent();
+    float utility_buttons_width = ui::CalcTextSize(ICON_FA_ARROWS_ALT_V).x;
+    if (parent != nullptr && (ui::IsItemHovered() || reorderingId_ == node->GetID()))
+    {
+        ui::SameLine();
+        ui::SetCursorPosX(ui::GetContentRegionMax().x - utility_buttons_width - style.ItemInnerSpacing.x);
+        ui::SmallButton(ICON_FA_ARROWS_ALT_V);
+        if (ui::IsItemActive())
+        {
+            if (ui::IsItemActivated())
+            {
+                reorderingInitialPos_ = parent->GetChildIndex(node);
+                reorderingId_ = node->GetID();
+            }
+            ImVec2 mouse_pos = ui::GetMousePos();
+            if (mouse_pos.y < ui::GetItemRectMin().y)
+                parent->ReorderChild(node, parent->GetChildIndex(node) - 1);
+            else if (mouse_pos.y > ui::GetItemRectMax().y)
+                parent->ReorderChild(node, parent->GetChildIndex(node) + 1);
+        }
+        else if (reorderingId_ == node->GetID())    // Deactivated
+        {
+            undo_->Add<UndoNodeReorder>(node, reorderingInitialPos_);
+            undo_->SetModifiedObject(this);
+            reorderingId_ = reorderingInitialPos_ = M_MAX_UNSIGNED;
+        }
+        else if (ui::IsItemHovered())
+            ui::SetTooltip("Reorder");
+    }
+
     if (opened)
     {
         if (!nodeRef.Expired())
@@ -730,12 +736,22 @@ void SceneTab::RenderNodeTree(Node* node)
                     ui::SmallButton(ICON_FA_ARROWS_ALT_V);
                     if (ui::IsItemActive())
                     {
-                        reorderingId_ = component->GetID();
+                        if (ui::IsItemActivated())
+                        {
+                            reorderingInitialPos_ = node->GetComponentIndex(component);
+                            reorderingId_ = component->GetID();
+                        }
                         ImVec2 mouse_pos = ui::GetMousePos();
                         if (mouse_pos.y < ui::GetItemRectMin().y)
                             node->ReorderComponent(component, node->GetComponentIndex(component) - 1);
                         else if (mouse_pos.y > ui::GetItemRectMax().y)
                             node->ReorderComponent(component, node->GetComponentIndex(component) + 1);
+                    }
+                    else if (reorderingId_ == component->GetID())   // Deactivated
+                    {
+                        undo_->Add<UndoComponentReorder>(component, reorderingInitialPos_);
+                        undo_->SetModifiedObject(this);
+                        reorderingId_ = reorderingInitialPos_ = M_MAX_UNSIGNED;
                     }
                     else if (ui::IsItemHovered())
                         ui::SetTooltip("Reorder");
@@ -790,31 +806,6 @@ void SceneTab::RemoveSelection()
     }
 
     ClearSelection();
-}
-
-void SceneTab::RefocusSelection()
-{
-    Scene* scene = GetScene();
-    if (scene == nullptr)
-        return;
-
-    if (!selectedNodes_.empty())
-    {
-        auto* refocusComponent = selectedNodes_.begin().get_node()->mValue.Get();
-
-        bool isMode3D_ = !scene->GetComponent<EditorSceneSettings>()->GetCamera2D();
-        StringHash cameraControllerType =
-            isMode3D_ ? DebugCameraController3D::GetTypeStatic() : DebugCameraController2D::GetTypeStatic();
-        if (Camera* camera = GetCamera())
-        {
-            auto* component = static_cast<DebugCameraController*>(camera->GetComponent(cameraControllerType));
-            if (component != nullptr)
-            {
-                // [TheophilusE - October 3, 2021] Will Enter Implementation Detail Later
-                URHO3D_LOGINFO("Refocused Camera to Entity " + refocusComponent->GetName());
-            }
-        }
-    }
 }
 
 Scene* SceneTab::GetScene()
@@ -882,11 +873,6 @@ void SceneTab::OnUpdate(VariantMap& args)
                 }
                 else if (ui::IsKeyPressed(KEY_ESCAPE))
                     ClearSelection();
-
-                if (ui::IsKeyPressed(KEY_F))
-                {
-                    RefocusSelection();
-                }
             }
         }
 
