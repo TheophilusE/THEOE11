@@ -26,6 +26,7 @@
 #include "../Scene/Component.h"
 #include "../Graphics/AnimationState.h"
 #include "../Graphics/AnimationStateSource.h"
+#include "../Math/EasingFunctions.h"
 
 namespace Urho3D
 {
@@ -240,6 +241,10 @@ private:
     ea::vector<AnimationControl> animations_;
     /// Attribute buffer for network replication.
     mutable VectorBuffer attrBuffer_;
+    /// Ease In function for Animation Controller
+    easing_functions easeInFunction = easing_functions::EaseNone;
+    /// Ease Out function for Animation Controller
+    easing_functions easeOutFunction = easing_functions::EaseNone;
 
     /// Internal dirty flags cleaned on Update.
     /// @{

@@ -85,6 +85,8 @@ void AnimationController::RegisterObject(Context* context)
         Variant::emptyVariantVector, AM_FILE | AM_NOEDIT | AM_READONLY);
     URHO3D_MIXED_ACCESSOR_ATTRIBUTE("Animation States", GetAnimationStatesAttr, SetAnimationStatesAttr, VariantVector,
         Variant::emptyVariantVector, AM_FILE | AM_NOEDIT);
+    URHO3D_ATTRIBUTE("Ease In Function", easing_functions, easeInFunction, easing_functions::EaseNone, AM_EDIT);
+    URHO3D_ATTRIBUTE("Ease Out Function", easing_functions, easeOutFunction, easing_functions::EaseNone, AM_EDIT);
 }
 
 void AnimationController::ApplyAttributes()

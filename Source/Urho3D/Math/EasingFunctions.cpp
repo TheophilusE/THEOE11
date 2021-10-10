@@ -170,6 +170,8 @@ double easeInOutBounce(double t)
     }
 }
 
+double easeNone(double t) { return t; }
+
 easingFunction GetEasingFunction(easing_functions function)
 {
     static eastl::map<easing_functions, easingFunction> easingFunctions;
@@ -205,6 +207,7 @@ easingFunction GetEasingFunction(easing_functions function)
         easingFunctions.insert(eastl::make_pair(EaseInBounce, easeInBounce));
         easingFunctions.insert(eastl::make_pair(EaseOutBounce, easeOutBounce));
         easingFunctions.insert(eastl::make_pair(EaseInOutBounce, easeInOutBounce));
+        easingFunctions.insert(eastl::make_pair(EaseNone, easeNone));
     }
 
     auto it = easingFunctions.find(function);
