@@ -7,6 +7,7 @@
 #include <Urho3D/Physics/RigidBody.h>
 #include <Urho3D/Scene/Scene.h>
 #include <Urho3D/Scene/SceneEvents.h>
+#include <Urho3D/Math/EasingFunctions.h>
 
 #include "BaseCharacter.h"
 
@@ -45,6 +46,10 @@ void Character::FixedUpdate(float timeStep)
     /// \todo Could cache the components for faster access instead of finding them each frame
     auto* body = GetComponent<RigidBody>();
     auto* animCtrl = node_->GetComponent<AnimationController>(true);
+
+    // Easing Function - Animations
+    auto easingFunction = GetEasingFunction(EaseOutCubic);
+    float fadeTime = (float)easingFunction(0.2);
 
     // Update the in air timer. Reset if grounded
     if (!onGround_)
@@ -90,7 +95,7 @@ void Character::FixedUpdate(float timeStep)
             {
                 body->ApplyImpulse(Vector3::UP * JUMP_FORCE);
                 okToJump_ = false;
-                animCtrl->PlayExclusive("Models/Locomotion/Manneqin/Animations/Base/InAir/ALS_N_JumpLoop_Unreal Take.ani", 0, false, 0.2f);
+                animCtrl->PlayExclusive("Models/Locomotion/Manneqin/Animations/Base/InAir/ALS_N_JumpLoop_Unreal Take.ani", 0, false, fadeTime);
             }
         }
         else
@@ -99,18 +104,18 @@ void Character::FixedUpdate(float timeStep)
 
     if (!onGround_)
     {
-        animCtrl->PlayExclusive("Models/Locomotion/Manneqin/Animations/Base/InAir/ALS_N_FallLoop_Unreal Take.ani", 0, false, 0.2f);
+        animCtrl->PlayExclusive("Models/Locomotion/Manneqin/Animations/Base/InAir/ALS_N_FallLoop_Unreal Take.ani", 0, false, fadeTime);
     }
     else
     {
         // Play walk animation if moving on ground, otherwise fade it out
         if (softGrounded && !moveDir.Equals(Vector3::ZERO))
         {
-            animCtrl->PlayExclusive("Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Run_F_Unreal Take.ani", 0, true, 0.2f);
+            animCtrl->PlayExclusive("Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Run_F_Unreal Take.ani", 0, true, fadeTime);
         }
         else
         {
-            animCtrl->PlayExclusive("Models/Locomotion/Manneqin/Animations/Base/BasePoses/ALS_N_Pose_Unreal Take.ani", 0, true, 0.2f);
+            animCtrl->PlayExclusive("Models/Locomotion/Manneqin/Animations/Base/BasePoses/ALS_N_Pose_Unreal Take.ani", 0, true, fadeTime);
         }
 
         // Set walk animation speed proportional to velocity
