@@ -107,7 +107,7 @@ void Character::FixedUpdate(float timeStep)
     // If in air, allow control, but slower than when on ground
     if (!isSprint)
     {
-        if (isWalk)
+        if (isWalk || (moveDir.x_ != 0))
         {
             body->ApplyImpulse(rot * moveDir * (softGrounded ? WALK_FORCE : INAIR_MOVE_FORCE));
         }
@@ -164,20 +164,201 @@ void Character::FixedUpdate(float timeStep)
         {
             if (isWalk)
             {
-                animCtrl->PlayExclusive(
-                    "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_F_Unreal Take.ani", 0, true,
-                    0.2f);
-                // Set animation speed proportional to velocity
-                animCtrl->SetSpeed("Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_F_Unreal Take.ani",
-                                   planeVelocity.Length() * 0.5f);
+                // Forward and Backwards
+                if (moveDir.x_ == 0 && moveDir.z_ != 0)
+                {
+                    // Forward
+                    if (moveDir.z_ > 0)
+                    {
+                        animCtrl->PlayExclusive(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_F_Unreal Take.ani", 0,
+                            true, 0.2f);
+                        // Set animation speed proportional to velocity
+                        animCtrl->SetSpeed(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_F_Unreal Take.ani",
+                            planeVelocity.Length() * 0.5f);
+                    }
+                    // Backward
+                    if (moveDir.z_ < 0)
+                    {
+                        animCtrl->PlayExclusive(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_B_Unreal Take.ani", 0,
+                            true, 0.2f);
+                        // Set animation speed proportional to velocity
+                        animCtrl->SetSpeed(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_B_Unreal Take.ani",
+                            planeVelocity.Length() * 0.5f);
+                    }
+                }
+                /// Left and Right
+                if (moveDir.x_ != 0)
+                {
+                    // Right
+                    if (moveDir.x_ > 0 && moveDir.z_ == 0)
+                    {
+                        animCtrl->PlayExclusive(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_RF_Unreal Take.ani", 0,
+                            true, 0.2f);
+                        // Set animation speed proportional to velocity
+                        animCtrl->SetSpeed(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_RF_Unreal Take.ani",
+                            planeVelocity.Length() * 0.5f);
+                    }
+                    // Left
+                    if (moveDir.x_ < 0 && moveDir.z_ == 0)
+                    {
+                        animCtrl->PlayExclusive(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_LF_Unreal Take.ani", 0,
+                            true, 0.2f);
+                        // Set animation speed proportional to velocity
+                        animCtrl->SetSpeed(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_LF_Unreal Take.ani",
+                            planeVelocity.Length() * 0.5f);
+                    }
+                    // Right Front
+                    if (moveDir.x_ > 0 && moveDir.z_ > 0)
+                    {
+                        animCtrl->PlayExclusive(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_RF_Unreal Take.ani", 0,
+                            true, 0.2f);
+                        // Set animation speed proportional to velocity
+                        animCtrl->SetSpeed(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_RF_Unreal Take.ani",
+                            planeVelocity.Length() * 0.5f);
+                    }
+                    // Left Front
+                    if (moveDir.x_ < 0 && moveDir.z_ > 0)
+                    {
+                        animCtrl->PlayExclusive(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_LF_Unreal Take.ani", 0,
+                            true, 0.2f);
+                        // Set animation speed proportional to velocity
+                        animCtrl->SetSpeed(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_LF_Unreal Take.ani",
+                            planeVelocity.Length() * 0.5f);
+                    }
+                    // Right Back
+                    if (moveDir.x_ > 0 && moveDir.z_ < 0)
+                    {
+                        animCtrl->PlayExclusive(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_RB_Unreal Take.ani", 0,
+                            true, 0.2f);
+                        // Set animation speed proportional to velocity
+                        animCtrl->SetSpeed(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_RB_Unreal Take.ani",
+                            planeVelocity.Length() * 0.5f);
+                    }
+                    // Left Back
+                    if (moveDir.x_ < 0 && moveDir.z_ < 0)
+                    {
+                        animCtrl->PlayExclusive(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_LB_Unreal Take.ani", 0,
+                            true, 0.2f);
+                        // Set animation speed proportional to velocity
+                        animCtrl->SetSpeed(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_LB_Unreal Take.ani",
+                            planeVelocity.Length() * 0.5f);
+                    }
+                }
             }
             else
             {
-                animCtrl->PlayExclusive(
-                    "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Run_F_Unreal Take.ani", 0, true, 0.2f);
-                // Set animation speed proportional to velocity
-                animCtrl->SetSpeed("Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Run_F_Unreal Take.ani",
-                                   planeVelocity.Length() * 0.3f);
+                // Forward and Backwards
+                if (moveDir.x_ == 0 && moveDir.z_ != 0)
+                {
+                    // Forward
+                    if (moveDir.z_ > 0)
+                    {
+                        animCtrl->PlayExclusive(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Run_F_Unreal Take.ani", 0,
+                            true, 0.2f);
+                        // Set animation speed proportional to velocity
+                        animCtrl->SetSpeed(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Run_F_Unreal Take.ani",
+                            planeVelocity.Length() * 0.3f);
+                    }
+                    // Backward
+                    if (moveDir.z_ < 0)
+                    {
+                        animCtrl->PlayExclusive(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Run_B_Unreal Take.ani", 0,
+                            true, 0.2f);
+                        // Set animation speed proportional to velocity
+                        animCtrl->SetSpeed(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Run_B_Unreal Take.ani",
+                            planeVelocity.Length() * 0.3f);
+                    }
+                }
+                /// Left and Right
+                if (moveDir.x_ != 0)
+                {
+                    // Right
+                    if (moveDir.x_ > 0 && moveDir.z_ == 0)
+                    {
+                        animCtrl->PlayExclusive(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_RF_Unreal Take.ani", 0,
+                            true, 0.2f);
+                        // Set animation speed proportional to velocity
+                        animCtrl->SetSpeed(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_RF_Unreal Take.ani",
+                            planeVelocity.Length() * 0.5f);
+                    }
+                    // Left
+                    if (moveDir.x_ < 0 && moveDir.z_ == 0)
+                    {
+                        animCtrl->PlayExclusive(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_LF_Unreal Take.ani", 0,
+                            true, 0.2f);
+                        // Set animation speed proportional to velocity
+                        animCtrl->SetSpeed(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_LF_Unreal Take.ani",
+                            planeVelocity.Length() * 0.5f);
+                    }
+                    // Right Front
+                    if (moveDir.x_ > 0 && moveDir.z_ > 0)
+                    {
+                        animCtrl->PlayExclusive(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_RF_Unreal Take.ani", 0,
+                            true, 0.2f);
+                        // Set animation speed proportional to velocity
+                        animCtrl->SetSpeed(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_RF_Unreal Take.ani",
+                            planeVelocity.Length() * 0.5f);
+                    }
+                    // Left Front
+                    if (moveDir.x_ < 0 && moveDir.z_ > 0)
+                    {
+                        animCtrl->PlayExclusive(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_LF_Unreal Take.ani", 0,
+                            true, 0.2f);
+                        // Set animation speed proportional to velocity
+                        animCtrl->SetSpeed(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_LF_Unreal Take.ani",
+                            planeVelocity.Length() * 0.5f);
+                    }
+                    // Right Back
+                    if (moveDir.x_ > 0 && moveDir.z_ < 0)
+                    {
+                        animCtrl->PlayExclusive(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_RB_Unreal Take.ani", 0,
+                            true, 0.2f);
+                        // Set animation speed proportional to velocity
+                        animCtrl->SetSpeed(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_RB_Unreal Take.ani",
+                            planeVelocity.Length() * 0.5f);
+                    }
+                    // Left Back
+                    if (moveDir.x_ < 0 && moveDir.z_ < 0)
+                    {
+                        animCtrl->PlayExclusive(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_LB_Unreal Take.ani", 0,
+                            true, 0.2f);
+                        // Set animation speed proportional to velocity
+                        animCtrl->SetSpeed(
+                            "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_LB_Unreal Take.ani",
+                            planeVelocity.Length() * 0.5f);
+                    }
+                }
             }
         }
         else if (softGrounded && !moveDir.Equals(Vector3::ZERO) && isSprint)
