@@ -242,9 +242,9 @@ private:
     /// Attribute buffer for network replication.
     mutable VectorBuffer attrBuffer_;
     /// Ease In function for Animation Controller
-    easing_functions easeInFunction = easing_functions::EaseNone;
+    easing_functions easeInFunction = easing_functions::EaseLinear;
     /// Ease Out function for Animation Controller
-    easing_functions easeOutFunction = easing_functions::EaseNone;
+    easing_functions easeOutFunction = easing_functions::EaseLinear;
 
     /// Internal dirty flags cleaned on Update.
     /// @{

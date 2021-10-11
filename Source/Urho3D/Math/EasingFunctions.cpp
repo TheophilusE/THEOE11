@@ -170,7 +170,7 @@ double easeInOutBounce(double t)
     }
 }
 
-double easeNone(double t) { return t; }
+double easeLinear(double t) { return t; }
 
 easingFunction GetEasingFunction(easing_functions function)
 {
@@ -207,7 +207,7 @@ easingFunction GetEasingFunction(easing_functions function)
         easingFunctions.insert(eastl::make_pair(EaseInBounce, easeInBounce));
         easingFunctions.insert(eastl::make_pair(EaseOutBounce, easeOutBounce));
         easingFunctions.insert(eastl::make_pair(EaseInOutBounce, easeInOutBounce));
-        easingFunctions.insert(eastl::make_pair(EaseNone, easeNone));
+        easingFunctions.insert(eastl::make_pair(EaseLinear, easeLinear));
     }
 
     auto it = easingFunctions.find(function);

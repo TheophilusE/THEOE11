@@ -59,7 +59,7 @@ enum URHO3D_API easing_functions
     EaseInBounce,
     EaseOutBounce,
     EaseInOutBounce,
-    EaseNone
+    EaseLinear
 };
 
 typedef double (*easingFunction)(double);
