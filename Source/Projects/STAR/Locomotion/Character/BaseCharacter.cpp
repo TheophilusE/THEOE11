@@ -1,5 +1,6 @@
 
 #include <Urho3D/Core/Context.h>
+#include <Urho3D/IO/Log.h>
 #include <Urho3D/Graphics/AnimationController.h>
 #include <Urho3D/IO/MemoryBuffer.h>
 #include <Urho3D/Physics/PhysicsEvents.h>
@@ -16,6 +17,7 @@ Character::Character(Context* context)
     , onGround_(false)
     , okToJump_(true)
     , inAirTimer_(0.0f)
+    , isSprint(false)
 {
     // Only the physics update event is needed: unsubscribe from the rest for optimization
     SetUpdateEventMask(USE_FIXEDUPDATE);
@@ -71,12 +73,24 @@ void Character::FixedUpdate(float timeStep)
     if (controls_.IsDown(CTRL_RIGHT))
         moveDir += Vector3::RIGHT;
 
+    if (controls_.IsDown(CTRL_SPRINT))
+        isSprint = true;
+    else
+        isSprint = false;
+
     // Normalize move vector so that diagonal strafing is not faster
     if (moveDir.LengthSquared() > 0.0f)
         moveDir.Normalize();
 
     // If in air, allow control, but slower than when on ground
-    body->ApplyImpulse(rot * moveDir * (softGrounded ? MOVE_FORCE : INAIR_MOVE_FORCE));
+    if (!isSprint)
+    {
+        body->ApplyImpulse(rot * moveDir * (softGrounded ? MOVE_FORCE : INAIR_MOVE_FORCE));
+    }
+    else
+    {
+        body->ApplyImpulse(rot * moveDir * (softGrounded ? SPRINT_FORCE : INAIR_MOVE_FORCE));
+    }
 
     if (softGrounded)
     {
@@ -105,17 +119,22 @@ void Character::FixedUpdate(float timeStep)
     else
     {
         // Play walk animation if moving on ground, otherwise fade it out
-        if (softGrounded && !moveDir.Equals(Vector3::ZERO))
+        if (softGrounded && !moveDir.Equals(Vector3::ZERO) && !isSprint)
         {
             animCtrl->PlayExclusive("Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Run_F_Unreal Take.ani", 0, true, 0.2f);
+            // Set animation speed proportional to velocity
+            animCtrl->SetSpeed("Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Run_F_Unreal Take.ani", planeVelocity.Length() * 0.3f);
+        }
+        else if (softGrounded && !moveDir.Equals(Vector3::ZERO) && isSprint)
+        {
+            animCtrl->PlayExclusive("Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Sprint_F_Impulse_Unreal Take.ani", 0, true, 0.2f);
+            // Set animation speed proportional to velocity
+            animCtrl->SetSpeed("Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Sprint_F_Impulse_Unreal Take.ani", planeVelocity.Length() * 0.175f);
         }
         else
         {
             animCtrl->PlayExclusive("Models/Locomotion/Manneqin/Animations/Base/BasePoses/ALS_N_Pose_Unreal Take.ani", 0, true, 0.2f);
         }
-
-        // Set walk animation speed proportional to velocity
-        animCtrl->SetSpeed("Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Run_F_Unreal Take.ani", planeVelocity.Length() * 0.3f);
     }
 
     // Reset grounded flag for next frame

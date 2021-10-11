@@ -11,8 +11,10 @@ const unsigned CTRL_BACK = 2;
 const unsigned CTRL_LEFT = 4;
 const unsigned CTRL_RIGHT = 8;
 const unsigned CTRL_JUMP = 16;
+const unsigned CTRL_SPRINT = 32;
 
 const float MOVE_FORCE = 0.8f;
+const float SPRINT_FORCE = 1.6f;
 const float INAIR_MOVE_FORCE = 0.02f;
 const float BRAKE_FORCE = 0.2f;
 const float JUMP_FORCE = 7.0f;
@@ -50,4 +52,6 @@ private:
     /// In air timer. Due to possible physics inaccuracy, character can be off ground for max. 1/10 second and still be
     /// allowed to move.
     float inAirTimer_;
+
+    bool isSprint;
 };

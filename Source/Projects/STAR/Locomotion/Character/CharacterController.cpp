@@ -33,8 +33,9 @@ void CharacterController::Update(float timeStep)
                 character_->controls_.Set(CTRL_BACK, input->GetKeyDown(KEY_S));
                 character_->controls_.Set(CTRL_LEFT, input->GetKeyDown(KEY_A));
                 character_->controls_.Set(CTRL_RIGHT, input->GetKeyDown(KEY_D));
+                character_->controls_.Set(CTRL_JUMP, input->GetKeyDown(KEY_SPACE));
+                character_->controls_.Set(CTRL_SPRINT, input->GetKeyDown(KEY_SHIFT));
             }
-            character_->controls_.Set(CTRL_JUMP, input->GetKeyDown(KEY_SPACE));
 
             {
                 character_->controls_.yaw_ += (float)input->GetMouseMoveX() * YAW_SENSITIVITY;
