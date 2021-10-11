@@ -146,8 +146,16 @@ void Character::FixedUpdate(float timeStep)
 
     if (!onGround_)
     {
-        animCtrl->PlayExclusive("Models/Locomotion/Manneqin/Animations/Base/InAir/ALS_N_FallLoop_Unreal Take.ani", 0,
-                                false, 0.2f);
+        if (inAirTimer_ < 1.4f)
+        {
+            animCtrl->PlayExclusive("Models/Locomotion/Manneqin/Animations/Base/InAir/ALS_N_FallLoop_Unreal Take.ani",
+                                    0, false, 0.2f);
+        }
+        else
+        {
+            animCtrl->PlayExclusive("Models/Locomotion/Manneqin/Animations/Base/InAir/ALS_Flail_Unreal Take.ani", 0,
+                                    true, 0.2f);
+        }
     }
     else
     {
@@ -157,7 +165,8 @@ void Character::FixedUpdate(float timeStep)
             if (isWalk)
             {
                 animCtrl->PlayExclusive(
-                    "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_F_Unreal Take.ani", 0, true, 0.2f);
+                    "Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_F_Unreal Take.ani", 0, true,
+                    0.2f);
                 // Set animation speed proportional to velocity
                 animCtrl->SetSpeed("Models/Locomotion/Manneqin/Animations/Base/Locomotion/ALS_N_Walk_F_Unreal Take.ani",
                                    planeVelocity.Length() * 0.5f);
