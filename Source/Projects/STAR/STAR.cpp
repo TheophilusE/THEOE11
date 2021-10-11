@@ -203,6 +203,21 @@ void STAR::HandleUpdate(StringHash eventType, VariantMap& eventData)
      // Toggle debug geometry with space
     if (input->GetKeyPress(KEY_M))
         drawDebug_ = !drawDebug_;
+
+    if (input->GetKeyPress(KEY_ESCAPE))
+    {
+        if (useMouseMode_ == MouseMode::MM_ABSOLUTE)
+        {
+            InitMouseMode(MouseMode::MM_FREE);
+            URHO3D_LOGINFO("Mouse Mode: Free");
+        }
+        else
+        {
+            InitMouseMode(MouseMode::MM_ABSOLUTE);
+            input->SetMouseVisible(false);
+            URHO3D_LOGINFO("Mouse Mode: Captured");
+        }
+    }
 }
 
 void STAR::HandlePostUpdate(StringHash eventType, VariantMap& eventData)
