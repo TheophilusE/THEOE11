@@ -18,6 +18,7 @@
 #include <Urho3D/Physics/RigidBody.h>
 #include <Urho3D/Resource/ResourceCache.h>
 #include <Urho3D/Scene/Scene.h>
+#include <Urho3D/Graphics/DebugRenderer.h>
 #include <Urho3D/UI/Font.h>
 #include <Urho3D/UI/Text.h>
 #include <Urho3D/UI/UI.h>
@@ -104,6 +105,9 @@ void STAR::CreateScene()
     // load scene
     XMLFile* xmlLevel = cache->GetResource<XMLFile>("Scenes/Benchmark.xml");
     scene_->LoadXML(xmlLevel->GetRoot());
+
+    // Add scene debug renderer
+    scene_->CreateComponent<DebugRenderer>();
 }
 
 void STAR::CreateCharacter()
@@ -202,7 +206,10 @@ void STAR::HandleUpdate(StringHash eventType, VariantMap& eventData)
 
      // Toggle debug geometry with space
     if (input->GetKeyPress(KEY_M))
+    {
         drawDebug_ = !drawDebug_;
+        URHO3D_LOGINFO("Draw Debug: " + fmt::format("{}", drawDebug_));
+    }
 
     if (input->GetKeyPress(KEY_ESCAPE))
     {
@@ -230,6 +237,13 @@ void STAR::HandlePostRenderUpdate(StringHash eventType, VariantMap& eventData)
 {
     if (drawDebug_)
     {
-        //scene_->GetComponent<PhysicsWorld>()->DrawDebugGeometry(true);
+        auto* physWorld = scene_->GetComponent<PhysicsWorld>();
+        auto* dbgRenderer = scene_->GetComponent<DebugRenderer>();
+
+        if (physWorld && dbgRenderer)
+        {
+            physWorld->DrawDebugGeometry(dbgRenderer, true);
+            URHO3D_LOGINFO("Physics");
+        }
     }
 }
