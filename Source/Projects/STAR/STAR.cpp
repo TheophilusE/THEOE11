@@ -129,7 +129,7 @@ void STAR::CreateCharacter()
     object->SetModel(cache->GetResource<Model>("Models/Locomotion/ALS_N_Pose.mdl"));
     //object->SetModel(cache->GetResource<Model>("Models/Locomotion/Manneqin/Model.mdl"));
     //object->SetMaterial(cache->GetResource<Material>("Models/Locomotion/Manneqin/Materials/M_Male_Body.xml"));
-    object->SetCastShadows(true);
+    object->SetCastShadows(false);
     adjustNode->CreateComponent<AnimationController>();
 
     // Set the head bone for manual control

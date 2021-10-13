@@ -43,19 +43,9 @@ private:
     void HandlePostUpdate(StringHash eventType, VariantMap& eventData);
     void HandlePostRenderUpdate(StringHash eventType, VariantMap& eventData);
 
-
     /// The controllable character component.
     WeakPtr<Character> character_;
-    /// First person camera flag.
-    bool firstPerson_;
-    bool drawDebug_;
-
-    struct
-    {
-        float minDistance = 1.0f;
-        float initialDistance = 5.0f;
-        float maxDistance = 20.0f;
-    } m_Camera;
+    bool drawDebug_ = false;
 };
 
 // A helper macro which defines main function. Forgetting it will result in linker errors complaining about missing
