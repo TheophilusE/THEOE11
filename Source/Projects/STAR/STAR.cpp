@@ -158,6 +158,9 @@ void STAR::CreateCharacter()
     objectNode->CreateComponent<CharacterController>();
     auto* cameraManager = objectNode->CreateComponent<PlayerCameraManager>();
     cameraManager->SetUp(scene_, cameraNode_);
+    character_->scene_ = scene_;
+    // Finish Character Setup
+    //character_->Setup();
 }
 
 void STAR::CreateInstructions()
@@ -240,10 +243,17 @@ void STAR::HandlePostRenderUpdate(StringHash eventType, VariantMap& eventData)
         auto* physWorld = scene_->GetComponent<PhysicsWorld>();
         auto* dbgRenderer = scene_->GetComponent<DebugRenderer>();
 
-        if (physWorld && dbgRenderer)
+        if (dbgRenderer)
         {
-            physWorld->DrawDebugGeometry(dbgRenderer, true);
-            URHO3D_LOGINFO("Physics");
+            if (physWorld)
+            {
+                physWorld->DrawDebugGeometry(dbgRenderer, true);
+            }
+
+            if (character_)
+            {
+                character_.Get()->DrawDebug();
+            }
         }
     }
 }

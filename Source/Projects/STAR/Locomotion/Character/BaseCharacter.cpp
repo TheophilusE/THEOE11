@@ -4,9 +4,12 @@
 #include <Urho3D/IO/Log.h>
 #include <Urho3D/IO/MemoryBuffer.h>
 #include <Urho3D/Math/EasingFunctions.h>
+#include <Urho3D/Math/Ray.h>
 #include <Urho3D/Physics/PhysicsEvents.h>
 #include <Urho3D/Physics/PhysicsWorld.h>
 #include <Urho3D/Physics/RigidBody.h>
+#include <Urho3D/IK/IKEffector.h>
+#include <Urho3D/IK/IKSolver.h>
 #include <Urho3D/Scene/Scene.h>
 #include <Urho3D/Scene/SceneEvents.h>
 
@@ -42,6 +45,42 @@ void Character::Start()
 {
     // Component has been inserted into its scene node. Subscribe to events now
     SubscribeToEvent(GetNode(), E_NODECOLLISION, URHO3D_HANDLER(Character, HandleNodeCollision));
+    SubscribeToEvent(GetNode(), E_SCENEDRAWABLEUPDATEFINISHED, URHO3D_HANDLER(Character, HandleSceneDrawableUpdateFinished));
+
+    // Set Character Node
+    characterNode_ = GetNode();
+
+    // We need to attach two inverse kinematic effectors to Jack's feet to
+    // control the grounding.
+    leftFoot_ = characterNode_->GetChild("foot_l", true);
+    rightFoot_ = characterNode_->GetChild("foot_r", true);
+    leftEffector_ = leftFoot_->CreateComponent<IKEffector>();
+    rightEffector_ = rightFoot_->CreateComponent<IKEffector>();
+    // Control 2 segments up to the hips
+    leftEffector_->SetChainLength(2);
+    rightEffector_->SetChainLength(2);
+
+    // For the effectors to work, an IKSolver needs to be attached to one of
+    // the parent nodes. Typically, you want to place the solver as close as
+    // possible to the effectors for optimal performance. Since in this case
+    // we're solving the legs only, we can place the solver at the spine.
+    Node* spine = characterNode_->GetChild("pelvis", true);
+    URHO3D_LOGINFO(fmt::format("{}", true));
+    solver_ = spine->CreateComponent<IKSolver>();
+
+    URHO3D_LOGINFO(fmt::format("{}", true));
+
+    // Two-bone solver is more efficient and more stable than FABRIK (but only
+    // works for two bones, obviously).
+    solver_->SetAlgorithm(IKSolver::TWO_BONE);
+
+    // Disable auto-solving, which means we need to call Solve() manually
+    solver_->SetFeature(IKSolver::AUTO_SOLVE, false);
+
+    // Only enable this so the debug draw shows us the pose before solving.
+    // This should NOT be enabled for any other reason (it does nothing and is
+    // a waste of performance).
+    solver_->SetFeature(IKSolver::UPDATE_ORIGINAL_POSE, true);
 }
 
 void Character::FixedUpdate(float timeStep)
@@ -380,6 +419,83 @@ void Character::FixedUpdate(float timeStep)
 
     // Reset grounded flag for next frame
     onGround_ = false;
+}
+
+void Character::DrawDebug()
+{
+    solver_->DrawDebugGeometry(true);
+}
+
+void Character::Setup()
+{
+    // Set Character Node
+    characterNode_ = GetNode();
+
+    // We need to attach two inverse kinematic effectors to Jack's feet to
+    // control the grounding.
+    leftFoot_ = characterNode_->GetChild("foot_l", true);
+    rightFoot_ = characterNode_->GetChild("foot_r", true);
+    leftEffector_ = leftFoot_->CreateComponent<IKEffector>();
+    rightEffector_ = rightFoot_->CreateComponent<IKEffector>();
+    // Control 2 segments up to the hips
+    leftEffector_->SetChainLength(2);
+    rightEffector_->SetChainLength(2);
+
+    // For the effectors to work, an IKSolver needs to be attached to one of
+    // the parent nodes. Typically, you want to place the solver as close as
+    // possible to the effectors for optimal performance. Since in this case
+    // we're solving the legs only, we can place the solver at the spine.
+    Node* spine = characterNode_->GetChild("pelvis", true);
+    URHO3D_LOGINFO(fmt::format("{}", true));
+    solver_ = spine->CreateComponent<IKSolver>();
+
+    URHO3D_LOGINFO(fmt::format("{}", true));
+
+    // Two-bone solver is more efficient and more stable than FABRIK (but only
+    // works for two bones, obviously).
+    solver_->SetAlgorithm(IKSolver::TWO_BONE);
+
+    // Disable auto-solving, which means we need to call Solve() manually
+    solver_->SetFeature(IKSolver::AUTO_SOLVE, false);
+
+    // Only enable this so the debug draw shows us the pose before solving.
+    // This should NOT be enabled for any other reason (it does nothing and is
+    // a waste of performance).
+    solver_->SetFeature(IKSolver::UPDATE_ORIGINAL_POSE, true);
+}
+
+void Character::HandleSceneDrawableUpdateFinished(StringHash eventType, VariantMap& eventData)
+{
+    auto* phyWorld = scene_->GetComponent<PhysicsWorld>();
+    Vector3 leftFootPosition = leftFoot_->GetWorldPosition();
+    Vector3 rightFootPosition = rightFoot_->GetWorldPosition();
+
+    // Cast ray down to get the normal of the underlying surface
+    PhysicsRaycastResult result;
+    phyWorld->RaycastSingle(result, Ray(leftFootPosition + Vector3(0, 1, 0), Vector3(0, -1, 0)), 2);
+    if (result.body_)
+    {
+        // Cast again, but this time along the normal. Set the target position
+        // to the ray intersection
+        phyWorld->RaycastSingle(result, Ray(leftFootPosition + result.normal_, -result.normal_), 2);
+        // The foot node has an offset relative to the root node
+        float footOffset = leftFoot_->GetWorldPosition().y_ - characterNode_->GetWorldPosition().y_;
+        leftEffector_->SetTargetPosition(result.position_ + result.normal_ * footOffset);
+        // Rotate foot according to normal
+        leftFoot_->Rotate(Quaternion(Vector3(0, 1, 0), result.normal_), TS_WORLD);
+    }
+
+    // Same deal with the right foot
+    phyWorld->RaycastSingle(result, Ray(rightFootPosition + Vector3(0, 1, 0), Vector3(0, -1, 0)), 2);
+    if (result.body_)
+    {
+        phyWorld->RaycastSingle(result, Ray(rightFootPosition + result.normal_, -result.normal_), 2);
+        float footOffset = rightFoot_->GetWorldPosition().y_ - characterNode_->GetWorldPosition().y_;
+        rightEffector_->SetTargetPosition(result.position_ + result.normal_ * footOffset);
+        rightFoot_->Rotate(Quaternion(Vector3(0, 1, 0), result.normal_), TS_WORLD);
+    }
+
+    solver_->Solve();
 }
 
 void Character::HandleNodeCollision(StringHash eventType, VariantMap& eventData)

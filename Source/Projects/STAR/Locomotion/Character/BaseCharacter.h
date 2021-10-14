@@ -23,6 +23,15 @@ const float JUMP_FORCE = 7.0f;
 const float YAW_SENSITIVITY = 0.1f;
 const float INAIR_THRESHOLD_TIME = 0.1f;
 
+namespace Urho3D
+{
+class AnimationController;
+class Node;
+class IKEffector;
+class IKSolver;
+class Scene;
+} // namespace Urho3D
+
 /// Character component, responsible for physical movement according to controls, as well as animation.
 class Character : public LogicComponent
 {
@@ -39,6 +48,16 @@ public:
     void Start() override;
     /// Handle physics world update. Called by LogicComponent base class.
     void FixedUpdate(float timeStep) override;
+
+    /// Draw debug geometry.
+    void DrawDebug();
+    /// Handle Setup
+    void Setup();
+    /// Handle IK Solve
+    void HandleSceneDrawableUpdateFinished(StringHash eventType, VariantMap& eventData);
+
+    /// Scene.
+    SharedPtr<Scene> scene_;
 
     /// Movement controls. Assigned by the main program each frame.
     Controls controls_;
@@ -59,4 +78,15 @@ private:
 
     bool isWalk;
     bool isSprint;
+
+    /// Inverse kinematic left effector.
+    SharedPtr<Urho3D::IKEffector> leftEffector_;
+    /// Inverse kinematic right effector.
+    SharedPtr<Urho3D::IKEffector> rightEffector_;
+    /// Inverse kinematic solver.
+    SharedPtr<Urho3D::IKSolver> solver_;
+    /// Need references to these nodes to calculate foot angles and offsets.
+    SharedPtr<Urho3D::Node> leftFoot_;
+    SharedPtr<Urho3D::Node> rightFoot_;
+    SharedPtr<Urho3D::Node> characterNode_;
 };
