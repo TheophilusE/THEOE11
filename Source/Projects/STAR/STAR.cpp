@@ -31,6 +31,7 @@
 
 #include <Urho3D/DebugNew.h>
 
+
 void STAR::Setup()
 {
     App::Setup();

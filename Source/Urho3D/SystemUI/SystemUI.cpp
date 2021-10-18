@@ -279,7 +279,7 @@ void SystemUI::OnRenderEnd()
     SendEvent(E_ENDRENDERINGSYSTEMUI);
 
     // Disable mouse wrapping automatically if none of mouse buttons are down
-    if (!ui::IsMouseDown(MOUSEB_LEFT) && !ui::IsMouseDown(MOUSEB_MIDDLE) && !ui::IsMouseDown(MOUSEB_RIGHT))
+    if (!ui::IsAnyMouseDown())
         enableWrapping_ = false;
 
     ImGuiIO& io = ui::GetIO();
@@ -301,6 +301,12 @@ void SystemUI::OnRenderEnd()
 
         if (mousePos != io.MousePos)
         {
+            for (int btn = 0; btn < ImGuiMouseButton_COUNT; btn++)
+            {
+                if (io.MouseDown[btn])
+                    io.MouseClickedPos[btn] += mousePos - io.MousePos;
+            }
+
             io.MousePos = mousePos;
             io.MousePosPrev = mousePos;
             io.WantSetMousePos = true;
@@ -533,6 +539,11 @@ ImVec2 ui::GetMouseDragDelta(Urho3D::MouseButton button, float lock_threshold)
     return ui::GetMouseDragDelta(Urho3D::ToImGui(button), lock_threshold);
 }
 
+void ui::ResetMouseDragDelta(Urho3D::MouseButton button)
+{
+    ResetMouseDragDelta(Urho3D::ToImGui(button));
+}
+
 bool ui::SetDragDropVariant(const ea::string& types, const Urho3D::Variant& variant, ImGuiCond cond)
 {
     if (SetDragDropPayload(types.c_str(), nullptr, 0, cond))
@@ -635,11 +646,8 @@ bool ui::ItemMouseActivation(Urho3D::MouseButton button, unsigned flags)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
-    bool hovered = ui::IsItemHovered();
-    if (hovered)
-        g.HoveredId = g.LastItemData.ID;
 
-    bool activated = !ui::IsItemActive() && hovered;
+    bool activated = !ui::IsItemActive() && ui::IsItemHovered();
     if (flags == ImGuiItemMouseActivation_Dragging)
         activated &= ui::IsMouseDragging(button);
     else
@@ -650,4 +658,28 @@ bool ui::ItemMouseActivation(Urho3D::MouseButton button, unsigned flags)
     else if (ui::IsItemActive() && !ui::IsMouseDown(button))
         ui::ClearActiveID();
     return ui::IsItemActive();
+}
+
+void ui::HideCursorWhenActive(Urho3D::MouseButton button, bool on_drag)
+{
+    using namespace Urho3D;
+    ImGuiContext& g = *GImGui;
+    SystemUI* systemUI = reinterpret_cast<SystemUI*>(g.IO.UserData);
+    if (ui::IsItemActive())
+    {
+        if (!on_drag || ui::IsMouseDragging(button))
+        {
+            Input* input = systemUI->GetSubsystem<Input>();
+            if (input->IsMouseVisible())
+            {
+                systemUI->SetMouseWrapping(true, true);
+                input->SetMouseVisible(false);
+            }
+        }
+    }
+    else if (ui::IsItemDeactivated())
+    {
+        systemUI->SetMouseWrapping(false, true);
+        systemUI->GetSubsystem<Input>()->SetMouseVisible(true);
+    }
 }

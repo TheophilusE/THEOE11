@@ -36,9 +36,11 @@
 #endif
 #include "../Engine/Engine.h"
 #include "../Engine/EngineDefs.h"
+#include "../Engine/EventManager.h"
 #include "../Graphics/Graphics.h"
 #include "../Graphics/Renderer.h"
 #include "../Input/Input.h"
+#include "../Input/InputManager.h"
 #include "../IO/FileSystem.h"
 #include "../IO/Log.h"
 #include "../IO/PackageFile.h"
@@ -323,6 +325,7 @@ bool Engine::Initialize(const VariantMap& parameters)
     // Initialize input
     if (HasParameter(parameters, EP_TOUCH_EMULATION))
         GetSubsystem<Input>()->SetTouchEmulation(GetParameter(parameters, EP_TOUCH_EMULATION).GetBool());
+    InputManager::GetSingleton()->m_Input.Reset(GetSubsystem<Input>());
 
     // Initialize network
 #ifdef URHO3D_NETWORK
@@ -740,6 +743,7 @@ void Engine::Update()
 
     // Logic post-update event
     SendEvent(E_POSTUPDATE, eventData);
+    EventManager::GetSingleton()->DispatchDeferred();
 
     // Rendering update event
     SendEvent(E_RENDERUPDATE, eventData);
