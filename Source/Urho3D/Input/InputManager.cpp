@@ -1,16 +1,18 @@
 
 #include "../Input/InputManager.h"
+#include "../Engine/Engine.h"
+#include "../Graphics/Graphics.h"
+#include "../IO/Archive.h"
+#include "../IO/ArchiveSerialization.h"
+#include "../IO/FileSystem.h"
 #include "../IO/Log.h"
+#include "../Resource/JSONArchive.h"
+#include "../Resource/ResourceCache.h"
+#include "../Resource/ResourceEvents.h"
 
 namespace Urho3D
 {
-void InputManager::Initialize()
-{
-    m_InputMap.insert(eastl::pair<eastl::string, InputScheme>("DefaultInputScheme", m_InputScheme));
-    LoadSchemes(m_InputMap);
-    PushScheme("DefaultInputScheme");
-    SetEnabled(true);
-}
+void InputManager::Initialize_() { SetEnabled(true); }
 
 void InputManager::BuildBindings()
 {
@@ -227,8 +229,204 @@ void InputManager::ResetMouseGrabbed_() { return m_Input->ResetMouseGrabbed(); }
 bool InputManager::HasFocus_() { return m_Input->HasFocus(); }
 bool InputManager::IsMinimized_() { return m_Input->IsMinimized(); }
 
+bool InputManager::SaveInputMapToFile_(eastl::string filePath)
+{
+    JSONFile file(m_Input.Get()->GetContext());
+    JSONOutputArchive archive(&file);
+    auto* cache = m_Input.Get()->GetSubsystem<ResourceCache>();
+    filePath = (cache->GetResourceDirs()[0] + filePath);
+
+    URHO3D_LOGINFO("Serializing InputMap to File at {}", filePath);
+    if (!SerializeInput_(archive, InputManager::GetSingleton()->m_InputMap))
+    {
+        URHO3D_LOGINFO("failed to serialize archive");
+        return false;
+    }
+
+    if (!file.SaveFile(filePath))
+    {
+        URHO3D_LOGINFO("Unable to save file at {}", filePath);
+        return false;
+    }
+    return true;
+}
+
+bool InputManager::LoadInputMapFromFile_(eastl::string filePath)
+{
+    JSONFile file(m_Input.Get()->GetContext());
+    auto* cache = m_Input.Get()->GetSubsystem<ResourceCache>();
+    filePath = (cache->GetResourceDirs()[0] + filePath);
+
+    URHO3D_LOGINFO("Deserializing InputMap from File at {}", filePath);
+    if (file.LoadFile(filePath))
+    {
+        DeserializeInput_(file, InputManager::GetSingleton()->m_InputMap);
+
+        InputManager::LoadSchemes(InputManager::GetSingleton()->m_InputMap);
+        InputManager::PushScheme("DefaultInputScheme");
+        InputManager::SetEnabled(true);
+    }
+    else
+        URHO3D_LOGINFO("Failed to load file at {}", filePath);
+
+    return true;
+}
+
+bool InputManager::SerializeInput_(Archive& archive, eastl::unordered_map<eastl::string, InputScheme>& inputMaps)
+{
+    const int version = 1;
+    if (!archive.IsInput() && m_Input.Get()->GetContext()->GetSubsystem<Engine>()->IsHeadless())
+    {
+        URHO3D_LOGERROR("Headless instance is supposed to use project as read-only.");
+        return false;
+    }
+
+    if (auto projectBlock = archive.OpenUnorderedBlock("InputRegistry"))
+    {
+        int archiveVersion = version;
+        SerializeValue(archive, "version", archiveVersion);
+
+        if (auto projectBlock = archive.OpenUnorderedBlock("inputSchemes"))
+        {
+            for (auto& iter1 : inputMaps)
+            {
+                if (auto projectBlock = archive.OpenUnorderedBlock(iter1.first.c_str()))
+                {
+                    if (auto projectBlock = archive.OpenSequentialBlock("bools"))
+                    {
+                        for (auto& iter2a : iter1.second.bools)
+                        {
+                            if (auto projectBlock = archive.OpenUnorderedBlock(""))
+                            {
+                                int device = (int)iter2a.device;
+                                int buttonSize = iter2a.buttons.size();
+
+                                SerializeValue(archive, "device", device);
+                                SerializeValue(archive, "inputEvent", iter2a.inputEvent);
+
+                                bool multiButton{true};
+                                int count = 0;
+                                if (multiButton)
+                                {
+                                    SerializeValue(archive, "buttonSize", buttonSize);
+                                    for (auto& iter2buttons : iter2a.buttons)
+                                    {
+                                        int button = (int)iter2buttons;
+                                        SerializeValue(archive, eastl::string{fmt::format("button_{}", count)}.c_str(),
+                                                       button);
+                                        count++;
+                                    }
+                                }
+                                else
+                                {
+                                    int button = (int)iter2a.buttons[0];
+                                    SerializeValue(archive, eastl::string{fmt::format("button_{}", count)}.c_str(),
+                                                   button);
+                                }
+                            }
+                        }
+                    }
+
+                    if (auto projectBlock = archive.OpenSequentialBlock("floats"))
+                    {
+                        for (auto& iter2a : iter1.second.floats)
+                        {
+                            if (auto projectBlock = archive.OpenUnorderedBlock(""))
+                            {
+                                if (auto projectBlock = archive.OpenUnorderedBlock(""))
+                                {
+                                    int device = (int)iter2a.device;
+                                    int buttonSize = iter2a.buttons.size();
+
+                                    SerializeValue(archive, "device", device);
+                                    SerializeValue(archive, "inputEvent", iter2a.inputEvent);
+
+                                    bool multiButton{true};
+                                    int count = 0;
+                                    if (multiButton)
+                                    {
+                                        SerializeValue(archive, "buttonSize", buttonSize);
+                                        for (auto& iter2buttons : iter2a.buttons)
+                                        {
+                                            int button = (int)iter2buttons;
+                                            SerializeValue(archive,
+                                                           eastl::string{fmt::format("button_{}", count)}.c_str(),
+                                                           button);
+                                            count++;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        int button = (int)iter2a.buttons[0];
+                                        SerializeValue(archive, eastl::string{fmt::format("button_{}", count)}.c_str(),
+                                                       button);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+bool InputManager::DeserializeInput_(JSONFile& file, eastl::unordered_map<eastl::string, InputScheme>& inputMaps)
+{
+    inputMaps.clear();
+    auto& root = file.GetRoot();
+
+    URHO3D_LOGINFO("Root Size {}", root.GetObject().size());
+    URHO3D_LOGINFO("Scheme Size {}", root["inputSchemes"].Size());
+
+    for (auto& iter1 : root["inputSchemes"]["DefaultInputScheme"])
+    {
+        InputScheme scheme;
+
+        auto& bools = iter1.second.GetArray();
+        auto& inputDesc = bools;
+        URHO3D_LOGINFO("Input Array Size: {}", bools.size());
+
+        for (auto& iter : inputDesc)
+        {
+            InputDescription a;
+            a.device = (Device)iter.Get("device").GetInt();
+            a.inputEvent = iter.Get("inputEvent").GetString();
+            int bSize = iter.Get("buttonSize").GetInt();
+
+            eastl::vector<Key> iMap;
+            for (int i = 0; i < bSize; i++)
+            {
+                iMap.push_back((Key)iter.Get(fmt::format("button_{}", i)).GetInt());
+            }
+            a.buttons = iMap;
+            scheme.bools.push_back(a);
+        }
+
+        for (auto& m : scheme.bools)
+        {
+            URHO3D_LOGINFO("-------------------------------");
+            URHO3D_LOGINFO("InputDevice: {}", (int)m.device);
+            URHO3D_LOGINFO("InputEvents, {}", m.inputEvent);
+
+            for (auto t : m.buttons)
+            {
+                URHO3D_LOGINFO("Keys: {}", (int)t);
+            }
+            URHO3D_LOGINFO("-------------------------------");
+        }
+
+        inputMaps.insert(eastl::pair<eastl::string, InputScheme>("DefaultInputScheme", scheme));
+    }
+
+    return true;
+}
+
 InputManager::InputManager()
     : m_IsEnabled(true)
+    , m_StartScheme("DefaultInputScheme")
 {
 }
 

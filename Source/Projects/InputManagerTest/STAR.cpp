@@ -1,32 +1,17 @@
 
 #include <Urho3D/Core/CoreEvents.h>
-#include <Urho3D/Core/ProcessUtils.h>
-#include <Urho3D/Engine/Engine.h>
-#include <Urho3D/Graphics/AnimatedModel.h>
-#include <Urho3D/Graphics/AnimationController.h>
-#include <Urho3D/Graphics/Camera.h>
-#include <Urho3D/Graphics/DebugRenderer.h>
-#include <Urho3D/Graphics/Light.h>
-#include <Urho3D/Graphics/Material.h>
-#include <Urho3D/Graphics/Octree.h>
-#include <Urho3D/Graphics/Renderer.h>
-#include <Urho3D/Graphics/Zone.h>
+#include <Urho3D/Core/StringUtils.h>
+#include <Urho3D/Graphics/Graphics.h>
+#include <Urho3D/IO/Archive.h>
+#include <Urho3D/IO/ArchiveSerialization.h>
 #include <Urho3D/IO/FileSystem.h>
-#include <Urho3D/Input/Controls.h>
-#include <Urho3D/Input/Input.h>
+#include <Urho3D/IO/Log.h>
 #include <Urho3D/Input/InputManager.h>
-#include <Urho3D/Physics/CollisionShape.h>
-#include <Urho3D/Physics/PhysicsWorld.h>
-#include <Urho3D/Physics/RigidBody.h>
+#include <Urho3D/Resource/JSONArchive.h>
 #include <Urho3D/Resource/ResourceCache.h>
-#include <Urho3D/Scene/Scene.h>
-#include <Urho3D/UI/Font.h>
-#include <Urho3D/UI/Text.h>
-#include <Urho3D/UI/UI.h>
+#include <Urho3D/Resource/ResourceEvents.h>
 
 #include "STAR.h"
-
-#include <Urho3D/DebugNew.h>
 
 /*
  * Improvements
@@ -61,35 +46,8 @@ void InputManagerTest::Start()
     // Subscribe to necessary events
     SubscribeToEvents();
 
-    // Add Input Keys
-    InputDescription a;
-    a.device = Device::Keyboard;
-    a.buttons = {Key::KEY_SPACE, Key::KEY_UP, Key::KEY_0};
-    a.inputEvent = "LongPress";
-
-    InputDescription b;
-    b.device = Device::Keyboard;
-    b.buttons = {Key::KEY_W, Key::KEY_A, Key::KEY_S, Key::KEY_D};
-    b.inputEvent = "OnePress";
-
-    InputDescription c;
-    c.device = Device::Keyboard;
-    c.buttons = {Key::KEY_ESCAPE};
-    c.inputEvent = "ToggleMouse";
-
-    InputManager::GetSingleton()->m_InputScheme.bools.push_back(a);
-    InputManager::GetSingleton()->m_InputScheme.bools.push_back(b);
-    InputManager::GetSingleton()->m_InputScheme.bools.push_back(c);
-
-    InputManager::GetSingleton()->m_InputMap.insert(
-        eastl::pair<eastl::string, InputScheme>("DefaultInputScheme", InputManager::GetSingleton()->m_InputScheme));
-
-    InputManager::LoadSchemes(InputManager::GetSingleton()->m_InputMap);
-    InputManager::PushScheme("DefaultInputScheme");
-    InputManager::SetEnabled(true);
-
-    // Set the mouse mode to use in the sample
-    InitMouseMode(MM_RELATIVE);
+    // Load Input Map
+    InputManager::LoadInputMapFromFile("Config/InputMap.json");
 }
 
 void InputManagerTest::Stop()
@@ -136,7 +94,14 @@ void InputManagerTest::HandleUpdate(StringHash eventType, VariantMap& eventData)
 
     if (InputManager::IsPressed("ToggleMouse"))
     {
-        InputManager::SetMouseVisible(!InputManager::IsMouseVisible());
+        if (InputManager::IsMouseVisible())
+        {
+            InputManager::SetMouseVisible(false);
+        }
+        else
+        {
+            InputManager::SetMouseVisible(true);
+        }
         URHO3D_LOGINFO("Mouse Visibility: {}", InputManager::IsMouseVisible());
     }
 }

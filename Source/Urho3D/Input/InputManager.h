@@ -72,7 +72,8 @@ class URHO3D_API InputManager
 
 public:
     static InputManager* GetSingleton();
-    static void SetEnabled(bool enabled) { GetSingleton()->SetEnabled_(enabled); };
+    static void SetEnabled(bool enabled) { return GetSingleton()->SetEnabled_(enabled); };
+    static void Initialize() { return GetSingleton()->Initialize_(); }
     static void MapBool(const Event::Type& action, Device device, eastl::vector<Key> buttons)
     {
         GetSingleton()->MapBool_(action, device, buttons);
@@ -119,9 +120,13 @@ public:
     static bool HasFocus() { return GetSingleton()->HasFocus_(); }
     static bool IsMinimized() { return GetSingleton()->IsMinimized_(); }
 
-private:
-    void Initialize();
+    /// Save Input map to JSON file
+    static bool SaveInputMapToFile(eastl::string filePath) { return GetSingleton()->SaveInputMapToFile_(filePath); }
+    /// Load Input map from JSON file
+    static bool LoadInputMapFromFile(eastl::string filePath) { return GetSingleton()->LoadInputMapFromFile_(filePath); }
 
+private:
+    void Initialize_();
     void SetEnabled_(bool enabled);
 
     void LoadSchemes_(const eastl::unordered_map<eastl::string, InputScheme>& inputSchemes);
@@ -169,11 +174,17 @@ private:
     bool HasFocus_();
     bool IsMinimized_();
 
+    bool SaveInputMapToFile_(eastl::string filePath);
+    bool LoadInputMapFromFile_(eastl::string filePath);
+    bool SerializeInput_(Archive& archive, eastl::unordered_map<eastl::string, InputScheme>& inputMaps);
+    bool DeserializeInput_(JSONFile& file, eastl::unordered_map<eastl::string, InputScheme>& inputMaps);
+
 public:
     WeakPtr<Input> m_Input;
     /// Store Input Schemes
     eastl::unordered_map<eastl::string, InputScheme> m_InputMap;
     /// Store Key and Keybind Name
     InputScheme m_InputScheme;
+    eastl::string m_StartScheme;
 };
 } // namespace Urho3D
