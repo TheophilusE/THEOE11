@@ -231,10 +231,11 @@ bool InputManager::IsMinimized_() { return m_Input->IsMinimized(); }
 
 bool InputManager::SaveInputMapToFile_(eastl::string filePath)
 {
-    JSONFile file(m_Input.Get()->GetContext());
-    JSONOutputArchive archive(&file);
-    auto* cache = m_Input.Get()->GetSubsystem<ResourceCache>();
+    auto* cache = m_Input->GetSubsystem<ResourceCache>();
     filePath = (cache->GetResourceDirs()[0] + filePath);
+
+    JSONFile iMapFile(m_Input->GetContext());
+    JSONOutputArchive archive(&iMapFile);
 
     URHO3D_LOGINFO("Serializing InputMap to File at {}", filePath);
     if (!SerializeInput_(archive, InputManager::GetSingleton()->m_InputMap))
@@ -242,12 +243,11 @@ bool InputManager::SaveInputMapToFile_(eastl::string filePath)
         URHO3D_LOGINFO("failed to serialize archive");
         return false;
     }
+    URHO3D_LOGINFO("Archive Has Error: {}", archive.HasError());
 
-    if (!file.SaveFile(filePath))
-    {
-        URHO3D_LOGINFO("Unable to save file at {}", filePath);
-        return false;
-    }
+    File file(m_Input->GetContext(), filePath, FILE_WRITE);
+    iMapFile.Save(file);
+
     return true;
 }
 
@@ -263,7 +263,7 @@ bool InputManager::LoadInputMapFromFile_(eastl::string filePath)
         DeserializeInput_(file, InputManager::GetSingleton()->m_InputMap);
 
         InputManager::LoadSchemes(InputManager::GetSingleton()->m_InputMap);
-        InputManager::PushScheme("DefaultInputScheme");
+        InputManager::PushScheme(m_StartScheme);
         InputManager::SetEnabled(true);
     }
     else
@@ -381,7 +381,7 @@ bool InputManager::DeserializeInput_(JSONFile& file, eastl::unordered_map<eastl:
     URHO3D_LOGINFO("Root Size {}", root.GetObject().size());
     URHO3D_LOGINFO("Scheme Size {}", root["inputSchemes"].Size());
 
-    for (auto& iter1 : root["inputSchemes"]["DefaultInputScheme"])
+    for (auto& iter1 : root["inputSchemes"][m_StartScheme])
     {
         InputScheme scheme;
 
@@ -418,7 +418,7 @@ bool InputManager::DeserializeInput_(JSONFile& file, eastl::unordered_map<eastl:
             URHO3D_LOGINFO("-------------------------------");
         }
 
-        inputMaps.insert(eastl::pair<eastl::string, InputScheme>("DefaultInputScheme", scheme));
+        inputMaps.insert(eastl::pair<eastl::string, InputScheme>(m_StartScheme, scheme));
     }
 
     return true;
