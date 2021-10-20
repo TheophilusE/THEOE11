@@ -6,14 +6,6 @@
 
 using namespace Urho3D;
 
-const unsigned CTRL_FORWARD = 1;
-const unsigned CTRL_BACK = 2;
-const unsigned CTRL_LEFT = 4;
-const unsigned CTRL_RIGHT = 8;
-const unsigned CTRL_JUMP = 16;
-const unsigned CTRL_WALK_RUN = 32;
-const unsigned CTRL_SPRINT = 64;
-
 const float WALK_FORCE = 0.5f;
 const float RUN_FORCE = 0.8f;
 const float SPRINT_FORCE = 1.6f;
@@ -58,11 +50,6 @@ public:
 
     /// Scene.
     SharedPtr<Scene> scene_;
-
-    /// Movement controls. Assigned by the main program each frame.
-    Controls controls_;
-    /// Previous Movement Controls
-    Controls controlsPrev_;
 
 private:
     /// Handle physics collision event.

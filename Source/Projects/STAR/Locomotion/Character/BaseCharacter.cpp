@@ -12,6 +12,7 @@
 #include <Urho3D/IK/IKSolver.h>
 #include <Urho3D/Scene/Scene.h>
 #include <Urho3D/Scene/SceneEvents.h>
+#include <Urho3D/Input/InputManager.h>
 
 #include "BaseCharacter.h"
 
@@ -34,8 +35,6 @@ void Character::RegisterObject(Context* context)
     // These macros register the class attributes to the Context for automatic load / save handling.
     // We specify the Default attribute mode which means it will be used both for saving into file, and network
     // replication
-    URHO3D_ATTRIBUTE("Controls Yaw", float, controls_.yaw_, 0.0f, AM_DEFAULT);
-    URHO3D_ATTRIBUTE("Controls Pitch", float, controls_.pitch_, 0.0f, AM_DEFAULT);
     URHO3D_ATTRIBUTE("On Ground", bool, onGround_, false, AM_DEFAULT);
     URHO3D_ATTRIBUTE("OK To Jump", bool, okToJump_, true, AM_DEFAULT);
     URHO3D_ATTRIBUTE("In Air Timer", float, inAirTimer_, 0.0f, AM_DEFAULT);
@@ -108,29 +107,29 @@ void Character::FixedUpdate(float timeStep)
     // Velocity on the XZ plane
     Vector3 planeVelocity(velocity.x_, 0.0f, velocity.z_);
 
-    if (controls_.IsDown(CTRL_FORWARD))
+    if (InputManager::IsDown("MoveForward"))
     {
         moveDir += Vector3::FORWARD;
     }
-    if (controls_.IsDown(CTRL_BACK))
+    if (InputManager::IsDown("MoveBackward"))
     {
         moveDir += Vector3::BACK;
     }
-    if (controls_.IsDown(CTRL_LEFT))
+    if (InputManager::IsDown("MoveLeft"))
     {
         moveDir += Vector3::LEFT;
     }
-    if (controls_.IsDown(CTRL_RIGHT))
+    if (InputManager::IsDown("MoveRight"))
     {
         moveDir += Vector3::RIGHT;
     }
 
-    if (controls_.IsPressed(CTRL_WALK_RUN, controlsPrev_))
+    if (InputManager::IsPressed("ToggleWalk"))
     {
         isWalk = !isWalk;
     }
 
-    if (controls_.IsDown(CTRL_SPRINT))
+    if (InputManager::IsDown("ToggleSprint"))
     {
         isSprint = true;
     }
@@ -167,7 +166,7 @@ void Character::FixedUpdate(float timeStep)
         body->ApplyImpulse(brakeForce);
 
         // Jump. Must release jump control between jumps
-        if (controls_.IsDown(CTRL_JUMP))
+        if (InputManager::IsPressed("Jump"))
         {
             if (okToJump_)
             {

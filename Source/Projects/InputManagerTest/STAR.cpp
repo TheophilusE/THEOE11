@@ -46,7 +46,34 @@ void InputManagerTest::Start()
     // Subscribe to necessary events
     SubscribeToEvents();
 
-    // Load Input Map
+    // Add Input Map
+    InputDescription a;
+    a.device = Device::Keyboard;
+    a.buttons = {Key::KEY_SPACE, Key::KEY_UP};
+    a.inputEvent = "LongPress";
+
+    InputDescription b;
+    b.device = Device::Keyboard;
+    b.buttons = {Key::KEY_W, Key::KEY_A, Key::KEY_S, Key::KEY_D};
+    b.inputEvent = "OnePress";
+
+    InputDescription c;
+    c.device = Device::Keyboard;
+    c.buttons = {Key::KEY_ESCAPE};
+    c.inputEvent = "ToggleMouse";
+
+    InputManager::GetSingleton()->m_InputScheme.bools.push_back(a);
+    InputManager::GetSingleton()->m_InputScheme.bools.push_back(b);
+    InputManager::GetSingleton()->m_InputScheme.bools.push_back(c);
+
+    InputManager::GetSingleton()->m_InputMap.insert(eastl::pair<eastl::string, InputScheme>(
+        InputManager::GetSingleton()->m_StartScheme, InputManager::GetSingleton()->m_InputScheme));
+
+    InputManager::LoadSchemes(InputManager::GetSingleton()->m_InputMap);
+    InputManager::PushScheme(InputManager::GetSingleton()->m_StartScheme);
+    InputManager::SetEnabled(true);
+
+    InputManager::SaveInputMapToFile("Config/InputMap.json");
     InputManager::LoadInputMapFromFile("Config/InputMap.json");
 }
 

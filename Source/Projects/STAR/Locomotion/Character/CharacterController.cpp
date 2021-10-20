@@ -7,47 +7,77 @@
 #include <Urho3D/Scene/Scene.h>
 #include <Urho3D/Scene/SceneManager.h>
 #include <Urho3D/UI/UI.h>
+#include <Urho3D/Input/InputManager.h>
 
 namespace Urho3D
 {
 void CharacterController::Start()
 {
     character_ = GetNode()->GetComponent<Character>(true);
+
+    InputDescription a;
+    a.device = Device::Keyboard;
+    a.buttons = {Key::KEY_W};
+    a.inputEvent = "MoveForward";
+
+    InputDescription b;
+    b.device = Device::Keyboard;
+    b.buttons = {Key::KEY_S};
+    b.inputEvent = "MoveBackward";
+
+    InputDescription c;
+    c.device = Device::Keyboard;
+    c.buttons = {Key::KEY_D};
+    c.inputEvent = "MoveRight";
+
+    InputDescription d;
+    d.device = Device::Keyboard;
+    d.buttons = {Key::KEY_A};
+    d.inputEvent = "MoveLeft";
+
+    InputDescription e;
+    e.device = Device::Keyboard;
+    e.buttons = {Key::KEY_UNKNOWN};
+    e.inputEvent = "Und";
+
+    InputDescription f;
+    f.device = Device::Keyboard;
+    f.buttons = {Key::KEY_SPACE};
+    f.inputEvent = "Jump";
+
+    InputDescription g;
+    g.device = Device::Keyboard;
+    g.buttons = {Key::KEY_ALT};
+    g.inputEvent = "ToggleWalk";
+
+    InputDescription h;
+    h.device = Device::Keyboard;
+    h.buttons = {Key::KEY_SHIFT};
+    h.inputEvent = "ToggleSprint";
+
+    InputManager::GetSingleton()->m_InputScheme.bools.push_back(a);
+    InputManager::GetSingleton()->m_InputScheme.bools.push_back(b);
+    InputManager::GetSingleton()->m_InputScheme.bools.push_back(c);
+    InputManager::GetSingleton()->m_InputScheme.bools.push_back(d);
+    InputManager::GetSingleton()->m_InputScheme.bools.push_back(e);
+    InputManager::GetSingleton()->m_InputScheme.bools.push_back(f);
+    InputManager::GetSingleton()->m_InputScheme.bools.push_back(g);
+    InputManager::GetSingleton()->m_InputScheme.bools.push_back(h);
+
+    InputManager::GetSingleton()->m_InputMap.insert(eastl::pair<eastl::string, InputScheme>(
+        InputManager::GetSingleton()->m_StartScheme, InputManager::GetSingleton()->m_InputScheme));
+
+    InputManager::LoadSchemes(InputManager::GetSingleton()->m_InputMap);
+    InputManager::PushScheme(InputManager::GetSingleton()->m_StartScheme);
+    InputManager::SetEnabled(true);
+
+    InputManager::SaveInputMapToFile("Config/InputMap.json");
+    InputManager::LoadInputMapFromFile("Config/InputMap.json");
 }
 
 void CharacterController::Update(float timeStep)
 {
-    auto* input = GetSubsystem<Input>();
 
-    if (character_)
-    {
-        // Clear previous controls
-        character_->controls_.Set(CTRL_FORWARD | CTRL_BACK | CTRL_LEFT | CTRL_RIGHT | CTRL_JUMP, false);
-
-        // Update controls using keys
-        auto* ui = GetSubsystem<UI>();
-        if (!ui->GetFocusElement())
-        {
-            {
-                character_->controls_.Set(CTRL_FORWARD, input->GetKeyDown(KEY_W));
-                character_->controls_.Set(CTRL_BACK, input->GetKeyDown(KEY_S));
-                character_->controls_.Set(CTRL_LEFT, input->GetKeyDown(KEY_A));
-                character_->controls_.Set(CTRL_RIGHT, input->GetKeyDown(KEY_D));
-                character_->controls_.Set(CTRL_JUMP, input->GetKeyDown(KEY_SPACE));
-                character_->controls_.Set(CTRL_WALK_RUN, input->GetKeyPress(KEY_ALT));
-                character_->controls_.Set(CTRL_SPRINT, input->GetKeyDown(KEY_SHIFT));
-            }
-
-            {
-                character_->controls_.yaw_ += (float)input->GetMouseMoveX() * YAW_SENSITIVITY;
-                character_->controls_.pitch_ += (float)input->GetMouseMoveY() * YAW_SENSITIVITY;
-            }
-            // Limit pitch
-            character_->controls_.pitch_ = Clamp(character_->controls_.pitch_, -80.0f, 80.0f);
-            // Set rotation already here so that it's updated every rendering frame instead of every physics frame
-            character_->GetNode()->SetRotation(Quaternion(character_->controls_.yaw_, Vector3::UP));
-        }
-    }
 }
 
 void CharacterController::PostUpdate(float timeStep)

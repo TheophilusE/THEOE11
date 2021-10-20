@@ -45,7 +45,7 @@ void STAR::Setup()
     engineParameters_[EP_WINDOW_WIDTH] = 1280;
     // Resource prefix path is a list of semicolon-separated paths which will be checked for containing resource
     // directories. They are relative to application executable file.
-    engineParameters_[EP_RESOURCE_PREFIX_PATHS] = "C:/THEO/Projects/STAR24/";
+    engineParameters_[EP_RESOURCE_PATHS] = "C:/THEO/Projects/STAR24/";
     engineParameters_[EP_LOG_NAME] = "StarLog.log";
 }
 
