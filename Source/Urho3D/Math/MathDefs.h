@@ -184,6 +184,10 @@ template <class T> inline T Atan2(T y, T x) { return M_RADTODEG * atan2(y, x); }
 /// @specialization{float}
 template <class T> inline T Pow(T x, T y) { return pow(x, y); }
 
+/// Return X in power 2.
+/// @specialization{float}
+template <class T> inline T Square(T x) { return pow(x, 2); }
+
 /// Return natural logarithm of X.
 /// @specialization{float}
 template <class T> inline T Ln(T x) { return log(x); }
@@ -191,6 +195,35 @@ template <class T> inline T Ln(T x) { return log(x); }
 /// Return square root of X.
 /// @specialization{float}
 template <class T> inline T Sqrt(T x) { return sqrt(x); }
+
+/// Return the inverse square root of X
+/// @specialization{float}
+template <class T> inline T InvSqrt(T x) { return 1.f / sqrt(x); }
+
+/// Return the inverse square root of X
+/// @specialization{float}
+template <class T> inline T FastInvSqrt(T x)
+{
+    const float threehalfs = 1.5F;
+
+    float x2 = x * 0.5F;
+    float y = x;
+
+    // evil floating point bit level hacking
+    long i = *(long*)&y;
+
+    // value is pre-assumed
+    i = 0x5f3759df - (i >> 1);
+    y = *(float*)&i;
+
+    // 1st iteration
+    y = y * (threehalfs - (x2 * y * y));
+
+    // 2nd iteration, this can be removed
+    // y = y * ( threehalfs - ( x2 * y * y ) );
+
+    return y;
+}
 
 /// Return remainder of X/Y for float values.
 template <class T, typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr>
