@@ -335,6 +335,57 @@ public:
     /// Return whether any component is Inf.
     bool IsInf() const { return Urho3D::IsInf(x_) || Urho3D::IsInf(y_); }
 
+    // Infinite Line Intersection (line1 is p1-p2 and line2 is p3-p4)
+    bool LineIntersection(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, Vector2& result)
+    {
+        float bx = p2.x_ - p1.x_;
+        float by = p2.y_ - p1.y_;
+        float dx = p4.x_ - p3.x_;
+        float dy = p4.y_ - p3.y_;
+        float bDotDPerp = bx * dy - by * dx;
+        if (bDotDPerp == 0)
+        {
+            return false;
+        }
+        float cx = p3.x_ - p1.x_;
+        float cy = p3.y_ - p1.y_;
+        float t = (cx * dy - cy * dx) / bDotDPerp;
+
+        result.x_ = p1.x_ + t * bx;
+        result.y_ = p1.y_ + t * by;
+        return true;
+    }
+
+    // Line Segment Intersection (line1 is p1-p2 and line2 is p3-p4)
+    bool LineSegmentIntersection(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, Vector2& result)
+    {
+        float bx = p2.x_ - p1.x_;
+        float by = p2.y_ - p1.y_;
+        float dx = p4.x_ - p3.x_;
+        float dy = p4.y_ - p3.y_;
+        float bDotDPerp = bx * dy - by * dx;
+        if (bDotDPerp == 0)
+        {
+            return false;
+        }
+        float cx = p3.x_ - p1.x_;
+        float cy = p3.y_ - p1.y_;
+        float t = (cx * dy - cy * dx) / bDotDPerp;
+        if (t < 0 || t > 1)
+        {
+            return false;
+        }
+        float u = (cx * by - cy * bx) / bDotDPerp;
+        if (u < 0 || u > 1)
+        {
+            return false;
+        }
+
+        result.x_ = p1.x_ + t * bx;
+        result.y_ = p1.y_ + t * by;
+        return true;
+    }
+
     /// Return normalized to unit length.
     Vector2 Normalized() const
     {

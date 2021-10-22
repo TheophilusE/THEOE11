@@ -36,7 +36,7 @@ namespace Urho3D
  * Derivative: how fast you are approaching, dampening
  * Integral: alignment error
  */
-struct FPIDController
+struct URHO3D_API FPIDController
 {
 public:
     // Proportional gain
@@ -98,7 +98,7 @@ private:
  * Derivative: how fast you are approaching, dampening
  * Integral: alignment error
  */
-struct FPIDController3D
+struct URHO3D_API FPIDController3D
 {
 
 public:

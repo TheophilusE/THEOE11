@@ -136,6 +136,17 @@ inline T Clamp(T value, T min, T max)
         return value;
 }
 
+// Clamps value between 0 and 1 and returns value
+inline float Clamp01(float value)
+{
+    if (value < 0.f)
+        return 0.f;
+    else if (value > 1.f)
+        return 1.f;
+    else
+        return value;
+}
+
 /// Per-component clamp of vector.
 template <class T>
 inline T VectorClamp(const T& value, const T& min, const T& max)
@@ -426,6 +437,107 @@ template<typename T> inline T Wrap(T value, T min, T max)
 {
     T range = max - min;
     return min + Mod(value, range);
+}
+
+// Compares two floating point values if they are similar.
+inline bool Approximately(float a, float b)
+{
+    // If a or b is zero, compare that the other is less or equal to epsilon.
+    // If neither a or b are 0, then find an epsilon that is good for
+    // comparing numbers at the maximum magnitude of a and b.
+    // Floating points have about 7 significant digits, so
+    // 1.000001f can be represented while 1.0000001f is rounded to zero,
+    // thus we could use an epsilon of 0.000001f for comparing values close to 1.
+    // We multiply this epsilon by the biggest magnitude of a and b.
+    return Abs(b - a) < Max(0.000001f * Max(Abs(a), Abs(b)), M_EPSILON * 8);
+}
+
+// Gradually changes a value towards a desired goal over time.
+inline float SmoothDamp(float current, float target, float& currentVelocity, float smoothTime, float maxSpeed, float deltaTime)
+{
+    // Based on Game Programming Gems 4 Chapter 1.10
+    smoothTime = Max(0.0001F, smoothTime);
+    float omega = 2.f / smoothTime;
+
+    float x = omega * deltaTime;
+    float exp = 1.f / (1.f + x + 0.48F * x * x + 0.235F * x * x * x);
+    float change = current - target;
+    float originalTo = target;
+
+    // Clamp maximum speed
+    float maxChange = maxSpeed * smoothTime;
+    change = Clamp(change, -maxChange, maxChange);
+    target = current - change;
+
+    float temp = (currentVelocity + omega * change) * deltaTime;
+    currentVelocity = (currentVelocity - omega * temp) * exp;
+    float output = target + (change + temp) * exp;
+
+    // Prevent overshooting
+    if (originalTo - current > 0.0F == output > originalTo)
+    {
+        output = originalTo;
+        currentVelocity = (output - originalTo) / deltaTime;
+    }
+
+    return output;
+}
+
+// Loops the value t, so that it is never larger than length and never smaller than 0.
+inline float Repeat(float t, float length) { return Clamp(t - Floor(t / length) * length, 0.0f, length); }
+
+// PingPongs the value t, so that it is never larger than length and never smaller than 0.
+inline float PingPong(float t, float length)
+{
+    t = Repeat(t, length * 2.f);
+    return length - Abs(t - length);
+}
+
+ // Moves a value /current/ towards /target/.
+inline float MoveTowards(float current, float target, float maxDelta)
+{
+    if (Abs(target - current) <= maxDelta)
+        return target;
+    return current + Sign(target - current) * maxDelta;
+}
+
+// Calculates the shortest difference between two given angles.
+inline float DeltaAngle(float current, float target)
+{
+    float delta = Repeat((target - current), 360.0F);
+    if (delta > 180.0F)
+        delta -= 360.0F;
+    return delta;
+}
+
+// Same as MoveTowards but makes sure the values interpolate correctly when they wrap around 360 degrees.
+inline float MoveTowardsAngle(float current, float target, float maxDelta)
+{
+    float deltaAngle = DeltaAngle(current, target);
+    if (-maxDelta < deltaAngle && deltaAngle < maxDelta)
+        return target;
+    target = current + deltaAngle;
+    return MoveTowards(current, target, maxDelta);
+}
+
+inline float Gamma(float value, float absmax, float gamma)
+{
+    bool negative = value < 0.f;
+    float absval = Abs(value);
+    if (absval > absmax)
+        return negative ? -absval : absval;
+
+    float result = Pow(absval / absmax, gamma) * absmax;
+    return negative ? -result : result;
+}
+
+// Same as Lerp but makes sure the values interpolate correctly when they wrap around 360 degrees.
+inline float LerpAngle(float a, float b, float t)
+{
+    float delta = Repeat((b - a), 360);
+    if (delta > 180)
+        delta -= 360;
+    return a + delta * Clamp01(t);
 }
 
 /// Calculate both sine and cosine, with angle in degrees.
