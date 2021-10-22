@@ -25,7 +25,8 @@
 #include <Urho3D/Scene/Node.h>
 
 #include "GamePlugin.h"
-
+#include "PIDControl.h"
+#include "PIDTranslator.h"
 
 URHO3D_DEFINE_PLUGIN_MAIN(Urho3D::GamePlugin);
 
@@ -41,7 +42,8 @@ GamePlugin::GamePlugin(Context* context)
 void GamePlugin::Load()
 {
     // Register custom components/subsystems/events when plugin is loaded.
-
+    PIDControl::RegisterObject(context_, this);
+    PIDTranslator::RegisterObject(context_, this);
 }
 
 void GamePlugin::Unload()

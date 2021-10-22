@@ -29,6 +29,7 @@ set(SOURCE
 	GamePlugin.cpp
     PIDControl.h
     PIDControl.cpp
+    PIDTranslator.h
 )
 
 add_library (PIDControllerPlugin ${SOURCE})

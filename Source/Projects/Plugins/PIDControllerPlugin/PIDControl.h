@@ -22,137 +22,48 @@
 
 #pragma once
 
-
 #include <Urho3D/Core/Context.h>
 #include <Urho3D/Engine/PluginApplication.h>
-#include <Urho3D/Scene/Node.h>
 #include <Urho3D/Scene/LogicComponent.h>
+#include <Urho3D/Math/PIDControl.h>
+#include <Urho3D/Scene/Node.h>
 
 namespace Urho3D
 {
-/**
- * PID Controller
- * Error: where you are vs where you want to be
- * Derivative: how fast you are approaching, dampening
- * Integral: alignment error
- */
-struct FPIDController
+enum class PID_UPDATE
 {
-public:
-    // Proportional gain
-    float P = 0.0f;
-
-    // Integral gain
-    float I = 0.0f;
-
-    // Derivative gain
-    float D = 0.0f;
-
-    // Max output (as absolute value)
-    float MaxOutAbs = 0.0f;
-
-    // Default constructor (no initialization)
-    FPIDController() {}
-
-    // Constructor with initial value for each component
-    FPIDController(float InP, float InI, float InD, float InMaxOutAbs);
-
-    // Update type function pointer variable
-    typedef float (FPIDController::*UpdateTypeFunctionPtr)(const float, const float);
-
-    // Update type function ptr
-    UpdateTypeFunctionPtr UpdateFunctionPtr;
-
-    //  Set PID values, reset error values, bind update function ptr
-    void Init(float InP, float InI, float InD, float InMaxOutAbs, bool bClearErrors = true);
-
-    // Reset error values, bind update function ptr
-    void Init(bool bClearErrors = true);
-
-    // Update the PID loop
-    FORCEINLINE float Update(const float InError, const float InDeltaTime);
-
-    // Update as a PID controller
-    FORCEINLINE float UpdateAsPID(const float InError, const float InDeltaTime);
-
-    // Update as a P controller
-    FORCEINLINE float UpdateAsP(const float InError, const float InDeltaTime = 0);
-
-    // Update as a PD controller
-    FORCEINLINE float UpdateAsPD(const float InError, const float InDeltaTime);
-
-    // Update as a PI controller
-    FORCEINLINE float UpdateAsPI(const float InError, const float InDeltaTime);
-
-private:
-    // Previous step error value
-    float PrevErr;
-
-    // Integral error
-    float IErr;
+    UpdateAsPID = 0,
+    UpdateAsPI,
+    UpdateAsPD,
+    UpdateAsP,
+    UpdateAuto,
+    DoNotUpdate
 };
 
-/**
- * PID Controller for FVector
- * Error: where you are vs where you want to be
- * Derivative: how fast you are approaching, dampening
- * Integral: alignment error
- */
-struct FPIDController3D
+/// Character component, responsible for physical movement according to controls, as well as animation.
+class PIDControl : public LogicComponent
 {
+    URHO3D_OBJECT(PIDControl, LogicComponent);
 
 public:
-    // Proportional gain
-    float P = 0.f;
+    /// Construct.
+    explicit PIDControl(Context* context);
 
-    // Integral gain
-    float I = 0.f;
+    /// Register object factory and attributes.
+    static void RegisterObject(Context* context);
+    static void RegisterObject(Context* context, PluginApplication* plugin);
 
-    // Derivative gain
-    float D = 0.f;
-
-    // Max output (as absolute value)
-    float MaxOutAbs = 0.f;
-
-    // Default constructor (no initialization)
-    FPIDController3D() {}
-
-    // Constructor with initial value for each component
-    FPIDController3D(float InP, float InI, float InD, float InMaxOutAbs);
-
-    // Update type function pointer variable
-    typedef Vector3 (FPIDController3D::*UpdateTypeFunctionPtr)(const Vector3, const float);
-
-    // Update type function ptr
-    UpdateTypeFunctionPtr UpdateFunctionPtr;
-
-    // Set PID values, reset error values, bind update function ptr
-    void Init(float InP, float InI, float InD, float InMaxOutAbs, bool bClearErrors = true);
-
-    // Reset error values, bind update function ptr
-    void Init(bool bClearErrors = true);
-
-    // Update the PID loop
-    FORCEINLINE Vector3 Update(const Vector3 InError, const float InDeltaTime);
-
-    // Update as a PID controller
-    FORCEINLINE Vector3 UpdateAsPID(const Vector3 InError, const float InDeltaTime);
-
-    // Update as a P controller
-    FORCEINLINE Vector3 UpdateAsP(const Vector3 InError, const float InDeltaTime = 0.f);
-
-    // Update as a PD controller
-    FORCEINLINE Vector3 UpdateAsPD(const Vector3 InError, const float InDeltaTime);
-
-    // Update as a PI controller
-    FORCEINLINE Vector3 UpdateAsPI(const Vector3 InError, const float InDeltaTime);
+    /// Handle startup. Called by LogicComponent base class.
+    void Start() override;
+    /// Handle physics world update. Called by LogicComponent base class.
+    void Update(float timeStep) override;
 
 private:
-    // Previous step error value
-    Vector3 PrevErr;
 
-    // Integral error
-    Vector3 IErr;
+    FPIDController m_PID;
+    PID_UPDATE m_PIDUpdate;
+    float inError;
+    static const char* PIDData[];
 };
 
-}
+} // namespace Urho3D
