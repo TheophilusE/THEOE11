@@ -121,7 +121,7 @@ public:
 
             rigidBody->ApplyTorque((xTorqueCorrection * Vector3::RIGHT) + (yTorqueCorrection * Vector3::UP) +
                                    (zTorqueCorrection * Vector3::FORWARD));
-            rigidBody->ApplyForce((Vector3::FORWARD) * thrust * timeStep);
+            rigidBody->ApplyForce(GetNode()->GetNodeForwardVector() * thrust * timeStep);
         }
     }
 
