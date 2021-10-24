@@ -1,4 +1,4 @@
-﻿//
+//
 // Copyright (c) 2008-2020 the Urho3D project.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -796,6 +796,24 @@ void Node::RotateAround(const Vector3& point, const Quaternion& delta, Transform
     MarkDirty();
 
     MarkNetworkUpdate();
+}
+
+Vector3 Node::GetNodeForwardVector()
+{
+    Quaternion Q = GetRotation();
+    return Q.RotateVector(Vector3::FORWARD);
+}
+
+Vector3 Node::GetNodeRightVector()
+{
+    Quaternion Q = GetRotation();
+    return Q.RotateVector(Vector3::RIGHT);
+}
+
+Vector3 Node::GetNodeUpVector()
+{
+    Quaternion Q = GetRotation();
+    return Q.RotateVector(Vector3::UP);
 }
 
 void Node::Yaw(float angle, TransformSpace space)

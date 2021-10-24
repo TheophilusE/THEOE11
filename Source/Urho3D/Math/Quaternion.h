@@ -435,14 +435,56 @@ public:
         return IsEqualUsingDot(dot) ? 0.0f : Acos(Min(Abs(dot), 1.0F)) * 2.0F * M_RADTODEG;
     }
 
+    /** Find the angular distance between two rotation quaternions (in radians) */
+    float AngularDistance(const Quaternion& Q) const
+    {
+        float InnerProd = x_ * Q.x_ + y_ * Q.y_ + z_ * Q.z_ + w_ * Q.w_;
+        return Acos((2 * InnerProd * InnerProd) - 1.f);
+    }
+
+    /**
+     * Rotate a vector by this quaternion.
+     *
+     * @param V the vector to be rotated
+     * @return vector after rotation
+     */
+    Vector3 RotateVector(Vector3 V)
+    {
+        // http://people.csail.mit.edu/bkph/articles/Quaternions.pdf
+        // V' = V + 2w(Q x V) + (2Q x (Q x V))
+        // refactor:
+        // V' = V + w(2(Q x V)) + (Q x (2(Q x V)))
+        // T = 2(Q x V);
+        // V' = V + w*(T) + (Q x T)
+
+        const Vector3 Q(x_, y_, z_);
+        const Vector3 T = 2.f * Q.CrossProduct(V);
+        const Vector3 Result = V + (w_ * T) + Q.CrossProduct(T);
+        return Result;
+    }
+
+    /**
+     * Rotate a vector by the inverse of this quaternion.
+     *
+     * @param V the vector to be rotated
+     * @return vector after rotation by the inverse of this quaternion.
+     */
+    Vector3 UnrotateVector(Vector3 V) const
+    {
+        const Vector3 Q(-x_, -y_, -z_); // Inverse
+        const Vector3 T = 2.f * Q.CrossProduct(V);
+        const Vector3 Result = V + (w_ * T) + Q.CrossProduct(T);
+        return Result;
+    }
+
     /*
-    * This function is similar to MoveTowards except that the vector is treated as a direction rather than a position.
-    * The current vector will be rotated round toward the target direction by an angle of maxRadiansDelta, although it
-    * will land exactly on the target rather than overshoot. If the magnitudes of current and target are different, then
-    * the magnitude of the result will be linearly interpolated during the rotation. If a negative value is used for
-    * maxRadiansDelta, the vector will rotate away from target/ until it is pointing in exactly the opposite direction,
-    * then stops.
-    */
+     * This function is similar to MoveTowards except that the vector is treated as a direction rather than a position.
+     * The current vector will be rotated round toward the target direction by an angle of maxRadiansDelta, although it
+     * will land exactly on the target rather than overshoot. If the magnitudes of current and target are different,
+     * then the magnitude of the result will be linearly interpolated during the rotation. If a negative value is used
+     * for maxRadiansDelta, the vector will rotate away from target/ until it is pointing in exactly the opposite
+     * direction, then stops.
+     */
     Quaternion RotateTowards(Quaternion to, float maxDegreesDelta)
     {
         float angle = Angle(to);
@@ -451,7 +493,7 @@ public:
         return Slerp(to, Min(1.0f, maxDegreesDelta / angle));
     }
 
-    // Less optimized rotate towards implementation
+    // Rotate towards another vector
     Quaternion RotateTowards(const Vector3& vectorOne, const Vector3& vectorTwo)
     {
         Quaternion q;
@@ -485,7 +527,6 @@ public:
             return q;
         }
     }
-
 
     /// Return Euler angles in degrees.
     /// @property
