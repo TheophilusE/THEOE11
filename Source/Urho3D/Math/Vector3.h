@@ -344,118 +344,13 @@ public:
         }
     }
 
-    /**
-     * Get the length (magnitude) of this vector.
-     *
-     * @return The length of this vector.
-     */
+    /// Return length.
+    /// @property
     float Length() const { return sqrtf(x_ * x_ + y_ * y_ + z_ * z_); }
 
-    /**
-     * Get the squared length of this vector.
-     *
-     * @return The squared length of this vector.
-     */
+    /// Return squared length.
+    /// @property
     float LengthSquared() const { return x_ * x_ + y_ * y_ + z_ * z_; }
-
-    /**
-     * Get the length of the 2D components of this vector.
-     *
-     * @return The 2D length of this vector.
-     */
-    float Length2D() const { return Sqrt(x_ * x_ + y_ * y_); }
-
-    /**
-     * Get the squared length of the 2D components of this vector.
-     *
-     * @return The squared 2D length of this vector.
-     */
-    float LengthSquared2D() const { return x_ * x_ + y_ * y_; }
-
-    /**
-     * Checks whether vector is near to zero within a specified tolerance.
-     *
-     * @param Tolerance Error tolerance.
-     * @return true if the vector is near to zero, false otherwise.
-     */
-    bool IsNearlyZero(float Tolerance) const
-    {
-        return abs(x_) <= Tolerance && abs(y_) <= Tolerance && abs(z_) <= Tolerance;
-    }
-
-    /**
-     * Checks whether all components of the vector are exactly zero.
-     *
-     * @return true if the vector is exactly zero, false otherwise.
-     */
-    bool IsZero() const { return x_ == 0.f && y_ == 0.f && z_ == 0.f; }
-
-    /**
-     * Check if the vector is of unit length, with specified tolerance.
-     *
-     * @param LengthSquaredTolerance Tolerance against squared length.
-     * @return true if the vector is a unit vector within the specified tolerance.
-     */
-    bool IsUnit(float LengthSquaredTolerance = M_EPSILON) const
-    {
-        return abs(1.0f - LengthSquared()) < LengthSquaredTolerance;
-    }
-
-    /**
-     * Checks whether all components of this vector are the same, within a tolerance.
-     *
-     * @param Tolerance Error tolerance.
-     * @return true if the vectors are equal within tolerance limits, false otherwise.
-     */
-    bool AllComponentsEqual(float Tolerance) const
-    {
-        return abs(x_ - y_) <= Tolerance && abs(x_ - z_) <= Tolerance && abs(y_ - z_) <= Tolerance;
-    }
-
-    /**
-     * Gets the reciprocal of this vector, avoiding division by zero.
-     * Zero components are set to LARGE_VALUE.
-     *
-     * @return Reciprocal of this vector.
-     */
-    Vector3 Reciprocal() const
-    {
-        Vector3 RecVector;
-        if (x_ != 0.f)
-        {
-            RecVector.x_ = 1.f / x_;
-        }
-        else
-        {
-            RecVector.x_ = M_LARGE_VALUE;
-        }
-        if (y_ != 0.f)
-        {
-            RecVector.y_ = 1.f / y_;
-        }
-        else
-        {
-            RecVector.y_ = M_LARGE_VALUE;
-        }
-        if (z_ != 0.f)
-        {
-            RecVector.z_ = 1.f / z_;
-        }
-        else
-        {
-            RecVector.z_ = M_LARGE_VALUE;
-        }
-
-        return RecVector;
-    }
-
-    /**
-     * Check whether X, Y and Z are nearly equal.
-     *
-     * @param Tolerance Specified Tolerance.
-     * @return true if X == Y == Z within the specified tolerance.
-     */
-    bool IsUniform(float Tolerance = M_LARGE_EPSILON) const { return AllComponentsEqual(Tolerance); }
 
     /// Calculate dot product.
     float DotProduct(const Vector3& rhs) const { return x_ * rhs.x_ + y_ * rhs.y_ + z_ * rhs.z_; }
@@ -497,100 +392,6 @@ public:
 
     /// Make vector orthogonal to the axis.
     Vector3 Orthogonalize(const Vector3& axis) const { return axis.CrossProduct(*this).CrossProduct(axis).Normalized(); }
-
-    /**
-     * Get a copy of this vector, clamped inside of a cube.
-     *
-     * @param Radius Half size of the cube.
-     * @return A copy of this vector, bound by cube.
-     */
-    Vector3 BoundToCube(float Radius) const
-    {
-        return Vector3(Clamp(x_, -Radius, Radius), Clamp(y_, -Radius, Radius),
-                       Clamp(z_, -Radius, Radius));
-    }
-
-    /**
-    * Get a copy of this vector, clamped inside of a cube.
-    *
-    * @param Min Minimum Bounds as a Vector3
-    * @param Max Maximum Bounds as a Vector3
-    * @return A Vector that is bounded to the Min and Max Vector
-    */
-    Vector3 BoundToBox(const Vector3& Min, const Vector3 Max) const
-    {
-        return Vector3(Clamp(x_, Min.x_, Max.x_), Clamp(y_, Min.y_, Max.y_), Clamp(z_, Min.z_, Max.z_));
-    }
-
-    /** Create a copy of this vector, with its magnitude clamped between Min and Max. */
-    Vector3 GetClampedToSize(float Min, float Max) const
-    {
-        float VecSize = Length();
-        Vector3 VecDir = (VecSize > M_EPSILON) ? (*this / VecSize) : ZERO;
-
-        VecSize = Clamp(VecSize, Min, Max);
-
-        return VecDir * VecSize;
-    }
-
-    /** Create a copy of this vector, with the 2D magnitude clamped between Min and Max. Z is unchanged. */
-    Vector3 GetClampedToSize2D(float Min, float Max) const
-    {
-        float VecSize2D = Length();
-        const Vector3 VecDir = (VecSize2D > M_EPSILON) ? (*this / VecSize2D) : ZERO;
-
-        VecSize2D = Clamp(VecSize2D, Min, Max);
-
-        return Vector3(VecSize2D * VecDir.x_, VecSize2D * VecDir.y_, z_);
-    }
-
-    /** Create a copy of this vector, with its maximum magnitude clamped to MaxSize. */
-    Vector3 GetClampedToMaxSize(float MaxSize) const
-    {
-        if (MaxSize < M_LARGE_EPSILON)
-        {
-            return Vector3::ZERO;
-        }
-
-        const float VSq = LengthSquared();
-        if (VSq > Square(MaxSize))
-        {
-            const float Scale = MaxSize * InvSqrt(VSq);
-            return Vector3(x_ * Scale, y_ * Scale, z_ * Scale);
-        }
-        else
-        {
-            return *this;
-        }
-    }
-
-    /** Create a copy of this vector, with the maximum 2D magnitude clamped to MaxSize. Z is unchanged. */
-    Vector3 GetClampedToMaxSize2D(float MaxSize) const
-    {
-        if (MaxSize < M_LARGE_EPSILON)
-        {
-            return Vector3(0.f, 0.f, z_);
-        }
-
-        const float VSq2D = LengthSquared2D();
-        if (VSq2D > Square(MaxSize))
-        {
-            const float Scale = MaxSize * InvSqrt(VSq2D);
-            return Vector3(x_ * Scale, y_ * Scale, z_);
-        }
-        else
-        {
-            return *this;
-        }
-    }
-
-    /**
-     * Add a vector to this and clamp the result in a cube.
-     *
-     * @param V Vector to add.
-     * @param Radius Half size of the cube.
-     */
-    void AddBounded(const Vector3& V, float Radius = UINT16_MAX) { *this = (*this + V).BoundToCube(Radius); }
 
     /// Calculate cross product.
     Vector3 CrossProduct(const Vector3& rhs) const
@@ -655,52 +456,6 @@ public:
         const float len = sqrtf(lenSquared);
         const float newLen = Clamp(len, minLength, maxLength);
         return *this * (newLen / len);
-    }
-
-    /**
-     * Util to calculate distance from a point to a bounding box
-     *
-     * @param Mins 3D Point defining the lower values of the axis of the bound box
-     * @param Max 3D Point defining the lower values of the axis of the bound box
-     * @param Point 3D position of interest
-     * @return the distance from the Point to the bounding box.
-     */
-    float ComputeSquaredDistanceFromBoxToPoint(const Vector3& Mins, const Vector3& Maxs,
-                                                           const Vector3& Point)
-    {
-        // Accumulates the distance as we iterate axis
-        float DistSquared = 0.f;
-
-        // Check each axis for min/max and add the distance accordingly
-        // NOTE: Loop manually unrolled for > 2x speed up
-        if (Point.x_ < Mins.x_)
-        {
-            DistSquared += Square(Point.x_ - Mins.x_);
-        }
-        else if (Point.x_ > Maxs.x_)
-        {
-            DistSquared += Square(Point.x_ - Maxs.x_);
-        }
-
-        if (Point.y_ < Mins.y_)
-        {
-            DistSquared += Square(Point.y_ - Mins.y_);
-        }
-        else if (Point.y_ > Maxs.y_)
-        {
-            DistSquared += Square(Point.y_ - Maxs.y_);
-        }
-
-        if (Point.z_ < Mins.z_)
-        {
-            DistSquared += Square(Point.z_ - Mins.z_);
-        }
-        else if (Point.z_ > Maxs.z_)
-        {
-            DistSquared += Square(Point.z_ - Maxs.z_);
-        }
-
-        return DistSquared;
     }
 
     /// Return float data.

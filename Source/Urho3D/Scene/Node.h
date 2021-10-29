@@ -279,13 +279,6 @@ public:
         RotateAround(Vector3(point), Quaternion(delta), space);
     }
 
-    /// Get Node Forward Vector on the axis (0, 0, 1)
-    Vector3 GetNodeForwardVector();
-    /// Get Node Right Vector on the axis (1, 0, 0)
-    Vector3 GetNodeRightVector();
-    /// Get Node Up Vector (0, 1, 0)
-    Vector3 GetNodeUpVector();
-
     /// Rotate around the X axis.
     void Pitch(float angle, TransformSpace space = TS_LOCAL);
     /// Rotate around the Y axis.

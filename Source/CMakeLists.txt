@@ -76,7 +76,6 @@ add_subdirectory (Extras)
 add_subdirectory (Samples)
 add_subdirectory (Player)
 add_subdirectory (Tests)
-add_subdirectory (Projects)
 
 if (NOT MINI_URHO)
     if (URHO3D_CSHARP AND NOT CMAKE_VS_MSBUILD_COMMAND)

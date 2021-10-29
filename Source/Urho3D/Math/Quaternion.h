@@ -38,10 +38,10 @@ public:
     /// Construct an identity quaternion.
     Quaternion() noexcept
 #ifndef URHO3D_SSE
-        : w_(1.0f)
-        , x_(0.0f)
-        , y_(0.0f)
-        , z_(0.0f)
+       :w_(1.0f),
+        x_(0.0f),
+        y_(0.0f),
+        z_(0.0f)
 #endif
     {
 #ifdef URHO3D_SSE
@@ -51,17 +51,15 @@ public:
 
     /// Copy-construct from another quaternion.
     Quaternion(const Quaternion& quat) noexcept
-#if defined(URHO3D_SSE) &&                                                                                             \
-    (!defined(_MSC_VER) || _MSC_VER >= 1700) /* Visual Studio 2012 and newer. VS2010 has a bug with these, see         \
-                                                https://github.com/urho3d/Urho3D/issues/1044 */
+#if defined(URHO3D_SSE) && (!defined(_MSC_VER) || _MSC_VER >= 1700) /* Visual Studio 2012 and newer. VS2010 has a bug with these, see https://github.com/urho3d/Urho3D/issues/1044 */
     {
         _mm_storeu_ps(&w_, _mm_loadu_ps(&quat.w_));
     }
 #else
-        : w_(quat.w_)
-        , x_(quat.x_)
-        , y_(quat.y_)
-        , z_(quat.z_)
+       :w_(quat.w_),
+        x_(quat.x_),
+        y_(quat.y_),
+        z_(quat.z_)
     {
     }
 #endif
@@ -69,10 +67,10 @@ public:
     /// Construct from values.
     Quaternion(float w, float x, float y, float z) noexcept
 #ifndef URHO3D_SSE
-        : w_(w)
-        , x_(x)
-        , y_(y)
-        , z_(z)
+       :w_(w),
+        x_(x),
+        y_(y),
+        z_(z)
 #endif
     {
 #ifdef URHO3D_SSE
@@ -83,10 +81,10 @@ public:
     /// Construct from a float array.
     explicit Quaternion(const float data[]) noexcept
 #ifndef URHO3D_SSE
-        : w_(data[0])
-        , x_(data[1])
-        , y_(data[2])
-        , z_(data[3])
+       :w_(data[0]),
+        x_(data[1]),
+        y_(data[2]),
+        z_(data[3])
 #endif
     {
 #ifdef URHO3D_SSE
@@ -95,19 +93,34 @@ public:
     }
 
     /// Construct from an angle (in degrees) and axis.
-    Quaternion(float angle, const Vector3& axis) noexcept { FromAngleAxis(angle, axis); }
+    Quaternion(float angle, const Vector3& axis) noexcept
+    {
+        FromAngleAxis(angle, axis);
+    }
 
     /// Construct from an angle (in degrees, for Urho2D).
-    explicit Quaternion(float angle) noexcept { FromAngleAxis(angle, Vector3::FORWARD); }
+    explicit Quaternion(float angle) noexcept
+    {
+        FromAngleAxis(angle, Vector3::FORWARD);
+    }
 
     /// Construct from Euler angles (in degrees). Equivalent to Y*X*Z.
-    Quaternion(float x, float y, float z) noexcept { FromEulerAngles(x, y, z); }
+    Quaternion(float x, float y, float z) noexcept
+    {
+        FromEulerAngles(x, y, z);
+    }
 
     /// Construct from Euler angles (in degrees).
-    explicit Quaternion(const Vector3& angles) noexcept { FromEulerAngles(angles.x_, angles.y_, angles.z_); }
+    explicit Quaternion(const Vector3& angles) noexcept
+    {
+        FromEulerAngles(angles.x_, angles.y_, angles.z_);
+    }
 
     /// Construct from the rotation difference between two direction vectors.
-    Quaternion(const Vector3& start, const Vector3& end) noexcept { FromRotationTo(start, end); }
+    Quaternion(const Vector3& start, const Vector3& end) noexcept
+    {
+        FromRotationTo(start, end);
+    }
 
     /// Construct from orthonormal axes.
     Quaternion(const Vector3& xAxis, const Vector3& yAxis, const Vector3& zAxis) noexcept
@@ -116,18 +129,22 @@ public:
     }
 
     /// Construct from a rotation matrix.
-    explicit Quaternion(const Matrix3& matrix) noexcept { FromRotationMatrix(matrix); }
+    explicit Quaternion(const Matrix3& matrix) noexcept
+    {
+        FromRotationMatrix(matrix);
+    }
 
 #ifdef URHO3D_SSE
-    explicit Quaternion(__m128 wxyz) noexcept { _mm_storeu_ps(&w_, wxyz); }
+    explicit Quaternion(__m128 wxyz) noexcept
+    {
+        _mm_storeu_ps(&w_, wxyz);
+    }
 #endif
 
     /// Assign from another quaternion.
-    Quaternion& operator=(const Quaternion& rhs) noexcept
+    Quaternion& operator =(const Quaternion& rhs) noexcept
     {
-#if defined(URHO3D_SSE) &&                                                                                             \
-    (!defined(_MSC_VER) || _MSC_VER >= 1700) /* Visual Studio 2012 and newer. VS2010 has a bug with these, see         \
-                                                https://github.com/urho3d/Urho3D/issues/1044 */
+#if defined(URHO3D_SSE) && (!defined(_MSC_VER) || _MSC_VER >= 1700) /* Visual Studio 2012 and newer. VS2010 has a bug with these, see https://github.com/urho3d/Urho3D/issues/1044 */
         _mm_storeu_ps(&w_, _mm_loadu_ps(&rhs.w_));
 #else
         w_ = rhs.w_;
@@ -139,7 +156,7 @@ public:
     }
 
     /// Add-assign a quaternion.
-    Quaternion& operator+=(const Quaternion& rhs)
+    Quaternion& operator +=(const Quaternion& rhs)
     {
 #ifdef URHO3D_SSE
         _mm_storeu_ps(&w_, _mm_add_ps(_mm_loadu_ps(&w_), _mm_loadu_ps(&rhs.w_)));
@@ -153,7 +170,7 @@ public:
     }
 
     /// Multiply-assign a scalar.
-    Quaternion& operator*=(float rhs)
+    Quaternion& operator *=(float rhs)
     {
 #ifdef URHO3D_SSE
         _mm_storeu_ps(&w_, _mm_mul_ps(_mm_loadu_ps(&w_), _mm_set1_ps(rhs)));
@@ -167,7 +184,7 @@ public:
     }
 
     /// Test for equality with another quaternion without epsilon.
-    bool operator==(const Quaternion& rhs) const
+    bool operator ==(const Quaternion& rhs) const
     {
 #ifdef URHO3D_SSE
         __m128 c = _mm_cmpeq_ps(_mm_loadu_ps(&w_), _mm_loadu_ps(&rhs.w_));
@@ -180,10 +197,10 @@ public:
     }
 
     /// Test for inequality with another quaternion without epsilon.
-    bool operator!=(const Quaternion& rhs) const { return !(*this == rhs); }
+    bool operator !=(const Quaternion& rhs) const { return !(*this == rhs); }
 
     /// Multiply with a scalar.
-    Quaternion operator*(float rhs) const
+    Quaternion operator *(float rhs) const
     {
 #ifdef URHO3D_SSE
         return Quaternion(_mm_mul_ps(_mm_loadu_ps(&w_), _mm_set1_ps(rhs)));
@@ -193,7 +210,7 @@ public:
     }
 
     /// Return negation.
-    Quaternion operator-() const
+    Quaternion operator -() const
     {
 #ifdef URHO3D_SSE
         return Quaternion(_mm_xor_ps(_mm_loadu_ps(&w_), _mm_castsi128_ps(_mm_set1_epi32((int)0x80000000UL))));
@@ -203,7 +220,7 @@ public:
     }
 
     /// Add a quaternion.
-    Quaternion operator+(const Quaternion& rhs) const
+    Quaternion operator +(const Quaternion& rhs) const
     {
 #ifdef URHO3D_SSE
         return Quaternion(_mm_add_ps(_mm_loadu_ps(&w_), _mm_loadu_ps(&rhs.w_)));
@@ -213,7 +230,7 @@ public:
     }
 
     /// Subtract a quaternion.
-    Quaternion operator-(const Quaternion& rhs) const
+    Quaternion operator -(const Quaternion& rhs) const
     {
 #ifdef URHO3D_SSE
         return Quaternion(_mm_sub_ps(_mm_loadu_ps(&w_), _mm_loadu_ps(&rhs.w_)));
@@ -223,7 +240,7 @@ public:
     }
 
     /// Multiply a quaternion.
-    Quaternion operator*(const Quaternion& rhs) const
+    Quaternion operator *(const Quaternion& rhs) const
     {
 #ifdef URHO3D_SSE
         __m128 q1 = _mm_loadu_ps(&w_);
@@ -232,26 +249,23 @@ public:
         const __m128 signy = _mm_castsi128_ps(_mm_set_epi32((int)0x80000000UL, (int)0x80000000UL, 0, 0));
         const __m128 signx = _mm_shuffle_ps(signy, signy, _MM_SHUFFLE(2, 0, 2, 0));
         const __m128 signz = _mm_shuffle_ps(signy, signy, _MM_SHUFFLE(3, 0, 0, 3));
-        __m128 out = _mm_mul_ps(_mm_shuffle_ps(q1, q1, _MM_SHUFFLE(1, 1, 1, 1)),
-                                _mm_shuffle_ps(q2, q2, _MM_SHUFFLE(0, 1, 2, 3)));
-        out = _mm_add_ps(_mm_mul_ps(_mm_xor_ps(signy, _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(2, 2, 2, 2))),
-                                    _mm_shuffle_ps(q2, q2, _MM_SHUFFLE(1, 0, 3, 2))),
-                         _mm_xor_ps(signx, out));
-        out = _mm_add_ps(_mm_mul_ps(_mm_xor_ps(signz, _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(3, 3, 3, 3))),
-                                    _mm_shuffle_ps(q2, q2, _MM_SHUFFLE(2, 3, 0, 1))),
-                         out);
+        __m128 out = _mm_mul_ps(_mm_shuffle_ps(q1, q1, _MM_SHUFFLE(1, 1, 1, 1)), _mm_shuffle_ps(q2, q2, _MM_SHUFFLE(0, 1, 2, 3)));
+        out = _mm_add_ps(_mm_mul_ps(_mm_xor_ps(signy, _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(2, 2, 2, 2))), _mm_shuffle_ps(q2, q2, _MM_SHUFFLE(1, 0, 3, 2))), _mm_xor_ps(signx, out));
+        out = _mm_add_ps(_mm_mul_ps(_mm_xor_ps(signz, _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(3, 3, 3, 3))), _mm_shuffle_ps(q2, q2, _MM_SHUFFLE(2, 3, 0, 1))), out);
         out = _mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(q1, q1, _MM_SHUFFLE(0, 0, 0, 0)), q2), out);
         return Quaternion(_mm_shuffle_ps(out, out, _MM_SHUFFLE(2, 1, 0, 3)));
 #else
-        return Quaternion(w_ * rhs.w_ - x_ * rhs.x_ - y_ * rhs.y_ - z_ * rhs.z_,
-                          w_ * rhs.x_ + x_ * rhs.w_ + y_ * rhs.z_ - z_ * rhs.y_,
-                          w_ * rhs.y_ + y_ * rhs.w_ + z_ * rhs.x_ - x_ * rhs.z_,
-                          w_ * rhs.z_ + z_ * rhs.w_ + x_ * rhs.y_ - y_ * rhs.x_);
+        return Quaternion(
+            w_ * rhs.w_ - x_ * rhs.x_ - y_ * rhs.y_ - z_ * rhs.z_,
+            w_ * rhs.x_ + x_ * rhs.w_ + y_ * rhs.z_ - z_ * rhs.y_,
+            w_ * rhs.y_ + y_ * rhs.w_ + z_ * rhs.x_ - x_ * rhs.z_,
+            w_ * rhs.z_ + z_ * rhs.w_ + x_ * rhs.y_ - y_ * rhs.x_
+        );
 #endif
     }
 
     /// Multiply a Vector3.
-    Vector3 operator*(const Vector3& rhs) const
+    Vector3 operator *(const Vector3& rhs) const
     {
 #ifdef URHO3D_SSE
         __m128 q = _mm_loadu_ps(&w_);
@@ -269,8 +283,10 @@ public:
         s = _mm_add_ps(s, s);
         s = _mm_add_ps(s, v);
 
-        return Vector3(_mm_cvtss_f32(s), _mm_cvtss_f32(_mm_shuffle_ps(s, s, _MM_SHUFFLE(1, 1, 1, 1))),
-                       _mm_cvtss_f32(_mm_movehl_ps(s, s)));
+        return Vector3(
+            _mm_cvtss_f32(s),
+            _mm_cvtss_f32(_mm_shuffle_ps(s, s, _MM_SHUFFLE(1, 1, 1, 1))),
+            _mm_cvtss_f32(_mm_movehl_ps(s, s)));
 #else
         Vector3 qVec(x_, y_, z_);
         Vector3 cross1(qVec.CrossProduct(rhs));
@@ -290,8 +306,7 @@ public:
     void FromAxes(const Vector3& xAxis, const Vector3& yAxis, const Vector3& zAxis);
     /// Define from a rotation matrix.
     void FromRotationMatrix(const Matrix3& matrix);
-    /// Define from a direction to look in and an up direction. Return true if successful, or false if would result in a
-    /// NaN, in which case the current value remains.
+    /// Define from a direction to look in and an up direction. Return true if successful, or false if would result in a NaN, in which case the current value remains.
     bool FromLookRotation(const Vector3& direction, const Vector3& up = Vector3::UP);
 
     /// Normalize to unit length.
@@ -353,9 +368,7 @@ public:
         __m128 n = _mm_mul_ps(q, q);
         n = _mm_add_ps(n, _mm_shuffle_ps(n, n, _MM_SHUFFLE(2, 3, 0, 1)));
         n = _mm_add_ps(n, _mm_shuffle_ps(n, n, _MM_SHUFFLE(0, 1, 2, 3)));
-        return Quaternion(_mm_div_ps(
-            _mm_xor_ps(q, _mm_castsi128_ps(_mm_set_epi32((int)0x80000000UL, (int)0x80000000UL, (int)0x80000000UL, 0))),
-            n));
+        return Quaternion(_mm_div_ps(_mm_xor_ps(q, _mm_castsi128_ps(_mm_set_epi32((int)0x80000000UL, (int)0x80000000UL, (int)0x80000000UL, 0))), n));
 #else
         float lenSquared = LengthSquared();
         if (lenSquared == 1.0f)
@@ -399,8 +412,7 @@ public:
     /// Test for equality with another quaternion with epsilon.
     bool Equals(const Quaternion& rhs, float eps = M_EPSILON) const
     {
-        return Urho3D::Equals(w_, rhs.w_, eps) && Urho3D::Equals(x_, rhs.x_, eps) && Urho3D::Equals(y_, rhs.y_, eps) &&
-               Urho3D::Equals(z_, rhs.z_, eps);
+        return Urho3D::Equals(w_, rhs.w_, eps) && Urho3D::Equals(x_, rhs.x_, eps) && Urho3D::Equals(y_, rhs.y_, eps) && Urho3D::Equals(z_, rhs.z_, eps);
     }
 
     /// Return whether any element is NaN.
@@ -414,118 +426,10 @@ public:
     {
 #ifdef URHO3D_SSE
         __m128 q = _mm_loadu_ps(&w_);
-        return Quaternion(
-            _mm_xor_ps(q, _mm_castsi128_ps(_mm_set_epi32((int)0x80000000UL, (int)0x80000000UL, (int)0x80000000UL, 0))));
+        return Quaternion(_mm_xor_ps(q, _mm_castsi128_ps(_mm_set_epi32((int)0x80000000UL, (int)0x80000000UL, (int)0x80000000UL, 0))));
 #else
         return Quaternion(w_, -x_, -y_, -z_);
 #endif
-    }
-
-    // Is the dot product of two quaternions within tolerance for them to be considered equal?
-    bool IsEqualUsingDot(float dot)
-    {
-        // Returns false in the presence of NaN values.
-        return dot > 1.0f - 0.000001F;
-    }
-
-    // Returns the angle in degrees between two rotations /a/ and /b/.
-    float Angle(Quaternion b)
-    {
-        float dot = DotProduct(b);
-        return IsEqualUsingDot(dot) ? 0.0f : Acos(Min(Abs(dot), 1.0F)) * 2.0F * M_RADTODEG;
-    }
-
-    /** Find the angular distance between two rotation quaternions (in radians) */
-    float AngularDistance(const Quaternion& Q) const
-    {
-        float InnerProd = x_ * Q.x_ + y_ * Q.y_ + z_ * Q.z_ + w_ * Q.w_;
-        return Acos((2 * InnerProd * InnerProd) - 1.f);
-    }
-
-    /**
-     * Rotate a vector by this quaternion.
-     *
-     * @param V the vector to be rotated
-     * @return vector after rotation
-     */
-    Vector3 RotateVector(Vector3 V)
-    {
-        // http://people.csail.mit.edu/bkph/articles/Quaternions.pdf
-        // V' = V + 2w(Q x V) + (2Q x (Q x V))
-        // refactor:
-        // V' = V + w(2(Q x V)) + (Q x (2(Q x V)))
-        // T = 2(Q x V);
-        // V' = V + w*(T) + (Q x T)
-
-        const Vector3 Q(x_, y_, z_);
-        const Vector3 T = 2.f * Q.CrossProduct(V);
-        const Vector3 Result = V + (w_ * T) + Q.CrossProduct(T);
-        return Result;
-    }
-
-    /**
-     * Rotate a vector by the inverse of this quaternion.
-     *
-     * @param V the vector to be rotated
-     * @return vector after rotation by the inverse of this quaternion.
-     */
-    Vector3 UnrotateVector(Vector3 V) const
-    {
-        const Vector3 Q(-x_, -y_, -z_); // Inverse
-        const Vector3 T = 2.f * Q.CrossProduct(V);
-        const Vector3 Result = V + (w_ * T) + Q.CrossProduct(T);
-        return Result;
-    }
-
-    /*
-     * This function is similar to MoveTowards except that the vector is treated as a direction rather than a position.
-     * The current vector will be rotated round toward the target direction by an angle of maxRadiansDelta, although it
-     * will land exactly on the target rather than overshoot. If the magnitudes of current and target are different,
-     * then the magnitude of the result will be linearly interpolated during the rotation. If a negative value is used
-     * for maxRadiansDelta, the vector will rotate away from target/ until it is pointing in exactly the opposite
-     * direction, then stops.
-     */
-    Quaternion RotateTowards(Quaternion to, float maxDegreesDelta)
-    {
-        float angle = Angle(to);
-        if (angle == 0.0f)
-            return to;
-        return Slerp(to, Min(1.0f, maxDegreesDelta / angle));
-    }
-
-    // Rotate towards another vector
-    Quaternion RotateTowards(const Vector3& vectorOne, const Vector3& vectorTwo)
-    {
-        Quaternion q;
-        float dot = vectorOne.DotProduct(vectorTwo);
-
-        if (dot < -0.999999)
-        {
-            Vector3 a = vectorOne.CrossProduct(vectorTwo);
-            q.x_ = a.x_;
-            q.y_ = a.y_;
-            q.z_ = a.z_;
-
-            q.w_ = sqrt((Square(vectorOne.Length())) * (Square(vectorTwo.Length())) + vectorOne.DotProduct(vectorTwo));
-
-            return q;
-        }
-        else if (dot > 0.999999)
-        {
-            return Quaternion(1.f, 0.f, 0.f, 0.f);
-        }
-        else
-        {
-            Vector3 a = vectorOne.CrossProduct(vectorTwo);
-            q.x_ = a.x_;
-            q.y_ = a.y_;
-            q.z_ = a.z_;
-
-            q.w_ = 1 + dot;
-            q.Normalize();
-
-            return q;
-        }
     }
 
     /// Return Euler angles in degrees.
@@ -587,4 +491,4 @@ public:
     static const Quaternion ZERO;
 };
 
-} // namespace Urho3D
+}
