@@ -129,12 +129,23 @@
 #include "107_HelloRmlUI/HelloRmlUI.h"
 #endif
 #include "108_RenderingShowcase/RenderingShowcase.h"
+#if URHO3D_PHYSICS
+#include <Urho3D/Physics/KinematicCharacterController.h>
+#include "109_KinematicCharacter/KinematicCharacterDemo.h"
+#endif
 #include "Rotator.h"
 
 #include "SamplesManager.h"
 
 // Expands to this example's entry-point
-URHO3D_DEFINE_APPLICATION_MAIN(Urho3D::SamplesManager);
+int RunApplication()
+{
+Urho3D::OpenConsoleWindow();
+Urho3D::SharedPtr<Urho3D::Context> context(new Urho3D::Context());
+Urho3D::SharedPtr<SamplesManager> application(new SamplesManager(context));
+return application->Run();
+}
+URHO3D_DEFINE_MAIN(RunApplication())
 
 namespace Urho3D
 {
@@ -148,7 +159,7 @@ void SamplesManager::Setup()
 {
     // Modify engine startup parameters
     engineParameters_[EP_WINDOW_TITLE] = "rbfx samples";
-    engineParameters_[EP_LOG_NAME]     = GetSubsystem<FileSystem>()->GetAppPreferencesDir("rbfx", "samples") + GetTypeName() + ".log";
+    //engineParameters_[EP_LOG_NAME]     = GetSubsystem<FileSystem>()->GetAppPreferencesDir("rbfx", "samples") + GetTypeName() + ".log";
     engineParameters_[EP_FULL_SCREEN]  = false;
     engineParameters_[EP_HEADLESS]     = false;
     engineParameters_[EP_SOUND]        = true;
@@ -158,7 +169,7 @@ void SamplesManager::Setup()
     engineParameters_[EP_ORIENTATIONS] = "Portrait";
 #endif
     if (!engineParameters_.contains(EP_RESOURCE_PREFIX_PATHS))
-        engineParameters_[EP_RESOURCE_PREFIX_PATHS] = ";..;../..";
+        engineParameters_[EP_RESOURCE_PREFIX_PATHS] = ";..;../../";
 
 #if DESKTOP
     GetCommandLineParser().add_option("--sample", startSample_);
@@ -243,6 +254,9 @@ void SamplesManager::Start()
     RegisterSample<Physics>();
     RegisterSample<PhysicsStressTest>();
     RegisterSample<Ragdolls>();
+    RegisterSample<KinematicCharacterDemo>();
+    context_->RegisterFactory<KinematicCharacterController>();
+    KinematicCharacter::RegisterObject(context_);
 #endif
     RegisterSample<SoundEffects>();
 #if URHO3D_NAVIGATION
