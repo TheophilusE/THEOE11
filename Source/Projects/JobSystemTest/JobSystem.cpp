@@ -3,13 +3,24 @@
 
 namespace Urho3D
 {
+void main_(FJS::Manager* mgr)
+{
+    mgr->WaitForSingle(FJS::JobPriority::Low, []() { URHO3D_LOGINFO("Main Callback Defined"); });
+}
+
 JobSystem::JobSystem()
 {
     m_ManagerOptions.NumFibers = m_ManagerOptions.NumThreads * 10;
     m_ManagerOptions.ThreadAffinity = true;
+
+    m_ManagerOptions.HighPriorityQueueSize = 128;
+    m_ManagerOptions.NormalPriorityQueueSize = 256;
+    m_ManagerOptions.LowPriorityQueueSize = 256;
+
     m_ManagerOptions.ShutdownAfterMainCallback = true;
 
     m_Manager.reset(new FJS::Manager(m_ManagerOptions));
+    //m_Manager->Run(main_);
 }
 
 JobSystem* JobSystem::GetSingleton()
@@ -55,12 +66,15 @@ bool JobSystem::Run_(Main_t main)
     else
     {
         URHO3D_LOGERROR("Execution Error Unknown");
-        return false;
     }
+
+    return false;
 }
 
 void JobSystem::ScheduleJob_(FJS::JobPriority priority, const FJS::JobInfo& info)
 {
     m_Manager->ScheduleJob(priority, info);
 }
-}
+
+void JobSystem::ShutDown_(bool blocking) { m_Manager->Shutdown(blocking); }
+} // namespace Urho3D

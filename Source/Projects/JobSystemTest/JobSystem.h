@@ -52,9 +52,12 @@ public:
     {
         return GetSingleton()->ScheduleJob_(priority, info);
     }
+    static void ShutDown(bool blocking) { return GetSingleton()->ShutDown_(blocking); }
+    static FJS::Manager* GetManager() { return GetSingleton()->m_Manager.get(); }
 
 private:
     bool Run_(Main_t main);
     void ScheduleJob_(FJS::JobPriority priority, const FJS::JobInfo& info);
+    void ShutDown_(bool blocking);
 };
 } // namespace Urho3D

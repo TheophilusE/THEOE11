@@ -27,6 +27,51 @@ InputManagerTest::InputManagerTest(Context* context)
 {
 }
 
+void main_(FJS::Manager* mgr)
+{
+    mgr->WaitForSingle(FJS::JobPriority::Low, []() { URHO3D_LOGINFO("Main Callback Defined"); });
+
+    // 2a: Lambda
+    mgr->WaitForSingle(FJS::JobPriority::High,
+                       []()
+                       {
+                           for (int i = 0; i < 10; ++i)
+                           {
+                               URHO3D_LOGINFO("Lambda2 with {}", i);
+                           }
+                       });
+
+    // Counter
+    FJS::Counter counter(mgr);
+
+    // It's also possible to create a JobInfo yourself
+    // First argument can be a Counter
+    FJS::JobInfo test_job(&counter,
+                          []()
+                          {
+                              for (int i = 0; i < 10; ++i)
+                              {
+                                  URHO3D_LOGINFO("Lambda3 with {}", i);
+                              }
+                          });
+    mgr->ScheduleJob(FJS::JobPriority::Normal, test_job);
+    mgr->WaitForCounter(&counter);
+
+    FJS::Queue queue(mgr, FJS::JobPriority::High); // default Priority is high
+    queue.Add(
+        []()
+        {
+            for (int i = 0; i < 10; ++i)
+            {
+                URHO3D_LOGINFO("Lambda4 with {}", i);
+            }
+        });
+    queue += test_job; // Safe, Jobs are executed consecutively
+    queue += test_job;
+
+    queue.Execute();
+}
+
 void InputManagerTest::Setup()
 {
     App::Setup();
@@ -81,33 +126,8 @@ void InputManagerTest::Start()
 
     InputManager::SaveInputMapToFile("Config/InputMap.json");
     InputManager::LoadInputMapFromFile("Config/InputMap.json");
-
-    JobSystem::Run([](FJS::Manager* mgr) {
-            // 2a: Lambda
-            mgr->WaitForSingle(FJS::JobPriority::High,
-                               []()
-                               {
-                                   for (int i = 0; i < 10; ++i)
-                                   {
-                                       URHO3D_LOGINFO("Lambda2 with {}", i);
-                                   }
-                               });
-        });
-
     
-    int& count = x;
-
-    JobSystem::ScheduleJob(FJS::JobPriority::Normal,
-                           [&count]()
-                           {
-                               for (int i = 0; i < 10; ++i)
-                               {
-                                   URHO3D_LOGINFO("Lambda3 with {}", count);
-                                   count++;
-                               }
-                           });
-
-    URHO3D_LOGINFO("Count {}", count);
+    JobSystem::Run(main_);
 }
 
 void InputManagerTest::Stop()
@@ -165,8 +185,6 @@ void InputManagerTest::HandleUpdate(StringHash eventType, VariantMap& eventData)
         }
         URHO3D_LOGINFO("Mouse Visibility: {}", InputManager::IsMouseVisible());
     }
-
-    
 }
 
 void InputManagerTest::HandlePostUpdate(StringHash eventType, VariantMap& eventData) { return; }

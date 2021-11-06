@@ -22,11 +22,9 @@
 
 #pragma once
 
-
 #include <EASTL/utility.h>
 
 #include "Tabs/Tab.h"
-
 
 namespace Urho3D
 {
@@ -41,7 +39,7 @@ struct ResourceContextMenuArgs
 
 URHO3D_EVENT(E_RESOURCEBROWSERDELETE, ResourceBrowserDelete)
 {
-    URHO3D_PARAM(P_NAME, Name);                                     // String
+    URHO3D_PARAM(P_NAME, Name); // String
 }
 
 /// Resource browser tab.
@@ -90,6 +88,8 @@ protected:
     ///
     bool RenderRenameWidget(const ea::string& icon = "");
 
+    /// Current dir navigation request.
+    ea::string cd_;
     /// Current open resource path.
     ea::string currentDir_;
     /// Current selected resource file name.
@@ -112,4 +112,4 @@ protected:
     ea::string renameBuffer_;
 };
 
-}
+} // namespace Urho3D

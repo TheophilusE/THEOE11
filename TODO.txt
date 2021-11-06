@@ -1,0 +1,35 @@
+TODOO
+
+Project Template
+
+-	Need to recheck the method for inserting configurations at ConfigFile.cpp
+
+	// configSection->insert(index, parameter + "=" + value); // Note: Need to test this later
+    configSection->insert_at(index, parameter + "=" + value);
+	
+	Line 523 - 524
+	
+-	Reformat method for parsing integers at function
+	In ConfigManager.cpp
+	In ConsoleHandler.cpp
+	
+-	Review function at 
+	
+		for (eastl::vector<eastl::string>::const_iterator section_itr = itr->begin() + 1; section_itr != itr->end();
+		 ++section_itr)
+		 
+	for iterator - > ++itr->begin()
+	
+-	PODVector type line 677 in Level.cpp
+
+-	Find a way to resolve void SettingsWindow::GetFullscreenResolutions(...) sorting at line 159 in SettingsWindow.cpp
+
+-	Find a way to resolve void SettingsWindow::FillRates(int monitor) swap at line 859 in SettingsWindow.cpp
+
+-	Find a way to resolve void SettingsWindow::FillResolutions(int monitor, int rate) swap at line 876 in SettingsWindow.cpp
+
+-	Find a way to resolve void SettingsWindow::RefreshVideoOptions() swap at line 941 in SettingsWindow.cpp
+
+-	Resolve LevelManager.cpp -> LevelManager Object Context already created - Line 65 [Done]
+
+-	Resolve BaseApplication.cpp -> SceneManager Object Context already created - Line 107

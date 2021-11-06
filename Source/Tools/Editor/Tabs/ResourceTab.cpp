@@ -23,29 +23,29 @@
 #include <EASTL/sort.h>
 
 #include <Urho3D/Core/CoreEvents.h>
-#include <Urho3D/IO/FileSystem.h>
-#include <Urho3D/Resource/ResourceCache.h>
-#include <Urho3D/Resource/ResourceEvents.h>
 #include <Urho3D/Graphics/Material.h>
 #include <Urho3D/Graphics/Model.h>
 #include <Urho3D/IO/ArchiveSerialization.h>
+#include <Urho3D/IO/FileSystem.h>
 #include <Urho3D/IO/Log.h>
+#include <Urho3D/Resource/ResourceCache.h>
+#include <Urho3D/Resource/ResourceEvents.h>
 #ifdef URHO3D_GLOW
 #include <Urho3D/Glow/LightmapUVGenerator.h>
 #endif
-#include <Urho3D/Graphics/Octree.h>
 #include <Urho3D/Graphics/ModelView.h>
+#include <Urho3D/Graphics/Octree.h>
 
 #include <IconFontCppHeaders/IconsFontAwesome5.h>
-#include <Toolbox/IO/ContentUtilities.h>
 #include <SDL/SDL_clipboard.h>
+#include <Toolbox/IO/ContentUtilities.h>
 
-#include "EditorEvents.h"
-#include "Tabs/Scene/SceneTab.h"
-#include "Tabs/InspectorTab.h"
-#include "Pipeline/Pipeline.h"
 #include "Editor.h"
+#include "EditorEvents.h"
+#include "Pipeline/Pipeline.h"
 #include "ResourceTab.h"
+#include "Tabs/InspectorTab.h"
+#include "Tabs/Scene/SceneTab.h"
 
 namespace Urho3D
 {
@@ -101,7 +101,7 @@ void ResourceTab::OnLocateResource(StringHash, VariantMap& args)
     //     selectedItem_ = resourceName.substr(currentDir_.length());
     // }
     // else
-        selectedItem_ = GetFileNameAndExtension(resourceName);
+    selectedItem_ = GetFileNameAndExtension(resourceName);
     scrollToCurrent_ = true;
     if (ui::GetIO().KeyCtrl)
         SelectCurrentItemInspector();
@@ -119,7 +119,8 @@ bool ResourceTab::RenderWindowContent()
     if (ui::BeginChild("##DirectoryTree", ui::GetContentRegionAvail()))
     {
         URHO3D_PROFILE("ResourceTab::DirectoryTree");
-        if (ui::TreeNodeEx("Root", ImGuiTreeNodeFlags_Leaf|ImGuiTreeNodeFlags_SpanFullWidth|(currentDir_.empty() ? ImGuiTreeNodeFlags_Selected : 0)))
+        if (ui::TreeNodeEx("Root", ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth |
+                                       (currentDir_.empty() ? ImGuiTreeNodeFlags_Selected : 0)))
         {
             if (ui::IsItemClicked(MOUSEB_LEFT))
             {
@@ -152,13 +153,15 @@ bool ResourceTab::RenderWindowContent()
 
         if (isRenamingFrame_ && selectedItem_ == name)
         {
-            ui::PushStyleVar(ImGuiStyleVar_FramePadding, {0, 0});    // Make sure text starts rendering at the same position
+            ui::PushStyleVar(ImGuiStyleVar_FramePadding,
+                             {0, 0}); // Make sure text starts rendering at the same position
             RenderRenameWidget(ICON_FA_FOLDER);
             ui::PopStyleVar();
             continue;
         }
 
-        int clicks = ui::DoubleClickSelectable((ICON_FA_FOLDER " " + RemoveTrailingSlash(name)).c_str(), name == selectedItem_);
+        int clicks =
+            ui::DoubleClickSelectable((ICON_FA_FOLDER " " + RemoveTrailingSlash(name)).c_str(), name == selectedItem_);
         if (ui::IsItemHovered() && ui::IsMouseClicked(MOUSEB_RIGHT))
         {
             selectedItem_ = name;
@@ -175,9 +178,9 @@ bool ResourceTab::RenderWindowContent()
         else if (clicks == 2 && name != ".")
         {
             if (name == "..")
-                currentDir_ = GetParentPath(currentDir_);
+                cd_ = GetParentPath(currentDir_);
             else
-                currentDir_ += AddTrailingSlash(name);
+                cd_ = currentDir_ + AddTrailingSlash(name);
             selectedItem_.clear();
             rescan_ = true;
             isRenamingFrame_ = 0;
@@ -247,7 +250,8 @@ bool ResourceTab::RenderWindowContent()
 
         if (isRenamingFrame_ && selectedItem_ == name)
         {
-            ui::PushStyleVar(ImGuiStyleVar_FramePadding, {0, 0});    // Make sure text starts rendering at the same position
+            ui::PushStyleVar(ImGuiStyleVar_FramePadding,
+                             {0, 0}); // Make sure text starts rendering at the same position
             RenderRenameWidget(icon);
             ui::PopStyleVar();
             continue;
@@ -361,7 +365,8 @@ bool ResourceTab::RenderWindowContent()
     }
 
     // Context menu when clicking empty area
-    if (!ui::IsAnyItemHovered() && ui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows) && ui::IsMouseClicked(MOUSEB_RIGHT))
+    if (!ui::IsAnyItemHovered() && ui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows) &&
+        ui::IsMouseClicked(MOUSEB_RIGHT))
     {
         ui::OpenPopup("Resource Item Context Menu");
         selectedItem_.clear();
@@ -421,7 +426,7 @@ void ResourceTab::SelectCurrentItemInspector()
         if (Resource* resource = cache->GetResource(contentTypes.front(), selected))
         {
             inspector->Inspect(resource);
-            undo->Connect(resource);    // ??
+            undo->Connect(resource); // ??
         }
     }
 
@@ -512,8 +517,8 @@ void ResourceTab::OnEndFrame(StringHash, VariantMap&)
 void ResourceTab::OnResourceUpdated(const FileChange& change)
 {
     // Rescan current dir if anything changed in it.
-    rescan_ = currentDir_ == change.fileName_ || currentDir_ == change.oldFileName_ || currentDir_ == GetPath(change.fileName_) ||
-        currentDir_ == GetPath(change.oldFileName_);
+    rescan_ = currentDir_ == change.fileName_ || currentDir_ == change.oldFileName_ ||
+              currentDir_ == GetPath(change.fileName_) || currentDir_ == GetPath(change.oldFileName_);
 
     // Rescan directory tree if any files were added/deleted/removed.
     if (change.kind_ != FILECHANGE_MODIFIED)
@@ -533,6 +538,8 @@ void ResourceTab::ScanAssets()
 {
     ResourceCache* cache = GetSubsystem<ResourceCache>();
     Pipeline* pipeline = GetSubsystem<Pipeline>();
+    currentDir_ = cd_;
+    cd_.clear();
 
     // Gather directories from project resource paths.
     currentDirs_.clear();
@@ -732,7 +739,8 @@ void ResourceTab::RenderDirectoryTree(const eastl::string& path)
     };
     ImGuiContext& g = *GImGui;
     if (path.empty())
-        ui::PushOverrideID(DIR_TREE_SEED_ID);   // Make id predictable so we can replicate it in OnResourceUpdated() and mark changed dirs as expired.
+        ui::PushOverrideID(DIR_TREE_SEED_ID); // Make id predictable so we can replicate it in OnResourceUpdated() and
+                                              // mark changed dirs as expired.
     else
         ui::PushID(path.c_str());
     CachedDirs* value = getCachedDirs(ui::GetCurrentWindow()->IDStack.back(), path);
@@ -759,21 +767,23 @@ void ResourceTab::RenderDirectoryTree(const eastl::string& path)
         {
             const ImGuiStyle& style = ui::GetStyle();
             ui::SameLine();
-            ui::PushStyleVar(ImGuiStyleVar_FramePadding, {g.StyleTemplate.FramePadding.x, 0});    // Make sure text starts rendering at the same position
+            ui::PushStyleVar(ImGuiStyleVar_FramePadding, {g.StyleTemplate.FramePadding.x,
+                                                          0}); // Make sure text starts rendering at the same position
             expireCache |= !RenderRenameWidget();
             ui::PopStyleVar();
         }
         else if (ui::IsItemClicked(MOUSEB_LEFT) || ui::IsItemClicked(MOUSEB_RIGHT))
         {
-            currentDir_ = childDir;
+            cd_ = childDir;
             selectedItem_.clear();
             isRenamingFrame_ = 0;
             openContextMenu |= ui::IsItemClicked(MOUSEB_RIGHT);
-            // Not selecting this item in inspector on purpose, so users can navigate directory tree with a selected scene entity.
+            // Not selecting this item in inspector on purpose, so users can navigate directory tree with a selected
+            // scene entity.
             rescan_ = true;
         }
 
-        if (!isOpen && currentDir_.starts_with(childDir) && currentDir_.length() > childDir.length())
+        if (!isOpen && cd_.starts_with(childDir) && cd_.length() > childDir.length())
         {
             // Open tree nodes when navigating file system in files panel.
             isOpen = true;
@@ -813,7 +823,8 @@ void ResourceTab::RenderDeletionDialog()
 {
     if (ui::BeginPopupModal("Delete?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        ui::Text("Would you like to delete '%s%s'?", currentDir_.c_str(), selectedItem_ == ".." ? "" : selectedItem_.c_str());
+        ui::Text("Would you like to delete '%s%s'?", currentDir_.c_str(),
+                 selectedItem_ == ".." ? "" : selectedItem_.c_str());
         ui::TextUnformatted(ICON_FA_EXCLAMATION_TRIANGLE " This action can not be undone!");
         ui::NewLine();
 
@@ -923,7 +934,8 @@ bool ResourceTab::RenderRenameWidget(const ea::string& icon)
                 ea::string absoluteCurrentPath = project->GetProjectPath() + dir + currentPath;
                 ea::string absoluteNewPath = project->GetProjectPath() + dir + newPath;
                 if (fs->Exists(absoluteNewPath))
-                    URHO3D_LOGERROR("Failed renaming '{}' to '{}' because destination exists.", absoluteCurrentPath, absoluteNewPath);
+                    URHO3D_LOGERROR("Failed renaming '{}' to '{}' because destination exists.", absoluteCurrentPath,
+                                    absoluteNewPath);
                 else if (fs->Exists(absoluteCurrentPath))
                 {
                     if (!cache->RenameResource(absoluteCurrentPath, absoluteNewPath))
@@ -938,7 +950,7 @@ bool ResourceTab::RenderRenameWidget(const ea::string& icon)
                 if (!selectedItem_.empty())
                     selectedItem_ = renameBuffer_;
                 else
-                    currentDir_ = newPath;
+                    cd_ = newPath;
             }
         }
         renameBuffer_.clear();
@@ -955,4 +967,4 @@ bool ResourceTab::RenderRenameWidget(const ea::string& icon)
     return isRenamingFrame_ > 0;
 }
 
-}
+} // namespace Urho3D
